@@ -1,0 +1,50 @@
+# --- Dependencies ---
+node_modules/
+.pnpm-store/
+
+# --- Nx ---
+.nx/cache/
+.nx/workspace-data/
+nx-cloud.env
+
+# --- Next.js (per app, matches apps/*/.next etc.) ---
+.next/
+out/
+next-env.d.ts
+
+# --- Build output ---
+dist/
+build/
+.turbo/
+
+# --- Env files (never commit secrets) ---
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- Testing ---
+/coverage/
+/playwright-report/
+/test-results/
+/blob-report/
+
+# --- Cloudflare / OpenNext ---
+.open-next/
+.wrangler/
+.dev.vars
+
+# --- Editors / OS ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# --- TypeScript ---
+*.tsbuildinfo
