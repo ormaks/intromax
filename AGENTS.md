@@ -56,6 +56,7 @@ Before considering any task done: lint, typecheck, and relevant e2e must pass.
 ## Workflow rules
 
 - **Branching**: one branch per change, always off `main`. Naming: `stage/NN-short-name` for roadmap-stage work (e.g. `stage/01-nx-workspace-scaffolding`), `feat/short-name` or `fix/short-name` for everything after Stage 1. Never commit directly to `main`, including small changes — everything lands as a PR.
+- **Stop before git.** Implementing a change never includes committing it. See [Review and handoff](#review-and-handoff) — the agent's work ends with a dirty working tree and a summary, not a commit.
 - **Small changes** (styling tweaks, copy edits, config bumps, obvious bug fixes): just do it directly. No spec needed.
 - **Non-trivial changes** (new page, new API/endpoint, data model change, migration of a legacy section, new shared component): write a short spec first using `spec-template.md`, get it reviewed, then implement against it.
 - Never self-merge. All changes land as a PR for human review, even small ones.
@@ -68,9 +69,22 @@ Before considering any task done: lint, typecheck, and relevant e2e must pass.
 - No database schema changes without a spec.
 - No new environment variables/secrets added without calling it out explicitly (name + purpose + where it's set in Cloudflare).
 
-## Review
+## Review and handoff
 
-After implementing a non-trivial change (lint/typecheck/tests passing), invoke the `code-reviewer` subagent (`.claude/agents/code-reviewer.md`) for an independent pass before opening the PR. It's read-only by design — it reports findings, it doesn't fix them. Address its findings, then open the PR for human review.
+After implementing a non-trivial change (lint/typecheck/tests passing), invoke the `code-reviewer` subagent (`.claude/agents/code-reviewer.md`) for an independent pass. It's read-only by design — it reports findings, it doesn't fix them. Address its findings, re-run the checks, and then **stop**.
+
+**Do not run `git commit`, `git push`, or `gh pr create` unless explicitly asked.** That applies to every change, small or large, and to fixes made in response to review findings. The subagent's review is an input to my review, not a substitute for it — I read the actual diff myself before anything leaves the machine.
+
+The handoff state the agent should leave behind:
+
+- All changes applied and saved, working tree **dirty and unstaged** — don't `git add` either, staging is part of my review
+- `lint`, `typecheck` and relevant e2e passing
+- Review findings either fixed or explicitly listed as deliberately-not-fixed, with reasons
+- A summary of what changed, what was decided and why, and anything left out
+
+Then wait. I'll review the changed files and either handle git myself or ask the agent to do it. When I do ask ("commit and push", "open the PR"), commit on the current branch, push, and open the PR against `main` — with a body that covers decisions and deviations, not just a file list.
+
+Never self-merge, and never merge on my behalf.
 
 ## Style
 

@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Use this agent after a task or spec has been implemented and lint/typecheck/tests are passing, to get an independent review before opening a PR. Invoke it explicitly at the end of an implementation task — it does not run automatically. Examples - "implementation is done and checks pass, run the code-reviewer on this change" or "review the diff on this branch before I open a PR".
+description: Use this agent after a task or spec has been implemented and lint/typecheck/tests are passing, to get an independent review before the change is handed back for human review. Invoke it explicitly at the end of an implementation task — it does not run automatically. Changes are normally still uncommitted at this point (see "Review and handoff" in AGENTS.md), so start from `git status --short` and read the modified and untracked files directly — `git diff` alone will miss new files entirely. Examples - "implementation is done and checks pass, run the code-reviewer on this change" or "review the working-tree changes before I look at them".
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---

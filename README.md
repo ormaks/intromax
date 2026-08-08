@@ -52,5 +52,6 @@ Requires Node 24 (see `.nvmrc`) and pnpm — `pnpm install`, then `pnpm nx dev p
 
 - Non-trivial changes: write a spec in `docs/specs/` first (`docs/spec-template.md`), then implement.
 - One branch per change (`stage/…`, `feat/…`, `fix/…`), PR to `main`, never commit directly to `main`.
+- Agents implement and self-check, then stop — commits, pushes and PRs happen only when I ask for them, after I've read the diff.
 - Full conventions: see `AGENTS.md`.
  
