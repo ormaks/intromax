@@ -1,0 +1,18 @@
+{
+  "name": "intromax",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "nx dev portfolio",
+    "build": "nx run-many -t build",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck"
+  },
+  "devDependencies": {
+    "nx": "23.1.1"
+  }
+}

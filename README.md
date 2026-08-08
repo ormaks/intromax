@@ -31,12 +31,15 @@ docs/
 .claude/
   agents/
     code-reviewer.md   # read-only review subagent
+  launch.json          # dev-server config for agent-driven local runs
 ```
+
+Requires Node 24 (see `.nvmrc`) and pnpm — `pnpm install`, then `pnpm nx dev portfolio`.
 
 ## Roadmap
 
 - [x] **Stage 0** — Agent workflow setup: `AGENTS.md`, spec template, `code-reviewer` subagent, `.gitignore`
-- [ ] **Stage 1** — Nx workspace + portfolio app scaffolding
+- [x] **Stage 1** — Nx workspace + portfolio app scaffolding
 - [ ] **Stage 2** — Architecture & design system
 - [ ] **Stage 3** — Backend/storage (contact-form endpoint first)
 - [ ] **Stage 4** — Legacy content/design migration

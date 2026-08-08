@@ -1,0 +1,25 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Single source of truth for versions shared across projects. React in
+# particular must resolve to one physical copy: packages/ui is compiled in
+# place via transpilePackages, so a drifting range there would give the app a
+# second React and "Invalid hook call" at runtime.
+catalog:
+  "@types/node": ^24
+  "@types/react": ^19
+  "@types/react-dom": ^19
+  eslint: ^9
+  react: 19.2.8
+  react-dom: 19.2.8
+  typescript: ^5
+
+# sharp/unrs-resolver hoisted from the create-next-app output: neither native
+# build is needed here. Next 16 only reaches for sharp when self-hosting image
+# optimization, and unrs-resolver ships prebuilt binaries. Nx does need its
+# postinstall — that is where its native bindings come from.
+allowBuilds:
+  nx: true
+  sharp: false
+  unrs-resolver: false

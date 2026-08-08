@@ -5,8 +5,9 @@ Conventions for any AI agent (Claude Code, etc.) working in this repo.
 ## Stack
 
 - Monorepo: Nx
-- Apps: Next.js 16 (App Router, Turbopack), TypeScript, Tailwind
-- Package manager: pnpm
+- Apps: Next.js 16 (App Router, Turbopack), TypeScript, Tailwind v4
+- Node: 24, pinned in `.nvmrc`
+- Package manager: pnpm (version pinned via `packageManager` in the root `package.json`)
 - Testing: Playwright (e2e), TypeScript strict mode + ESLint as the fast checks
 - Deploy: Cloudflare (via `@opennextjs/cloudflare`), CI through GitHub Actions
 
@@ -16,9 +17,20 @@ Conventions for any AI agent (Claude Code, etc.) working in this repo.
 - `apps/<pet-project-name>` — each pet project is its own app
 - `packages/common` — shared utils, types, hooks, and common dependencies consumed by every app
 - `packages/ui` — shared design-system components used across apps
-- `packages/config` — shared eslint/tsconfig/tailwind config (manual, not Nx-generated — kept explicit and easy to reason about)
+- `packages/config` — shared eslint/tsconfig/tailwind config (manual, not Nx-generated — kept explicit and easy to reason about), consumed through subpath exports:
+  - `@intromax/config/tsconfig/{base,react,next}.json` — `base` for plain TS, `react` adds DOM + JSX, `next` adds the Next plugin
+  - `@intromax/config/eslint/{base,react,next}` — flat configs. `react` and `next` each compose `base`; `next` does **not** compose `react`, because `eslint-config-next` already registers the react-hooks plugin and flat config rejects a duplicate plugin key. Use `react` for shared React packages, `next` for apps.
+  - `@intromax/config/tailwind/theme.css` — Tailwind v4 is CSS-first, so the shared "preset" is a stylesheet apps `@import`, not a JS config object
 
-Nx here is used for task orchestration/caching across apps, not for generating app scaffolding — apps are set up manually following standard Next.js conventions.
+Nx here is used for task orchestration/caching across apps, not for generating app scaffolding — apps are set up manually following standard Next.js conventions. Nx discovers targets straight from each project's `package.json` scripts; there are no Nx plugins and no Nx Cloud.
+
+`packages/ui` and `packages/common` export TypeScript source rather than a built `dist/`. Apps compile them via `transpilePackages` in `next.config.ts` — so a new app must list them there, and a non-Next consumer would need a real build step added.
+
+### Version management
+
+Versions shared across projects (`react`, `react-dom`, `typescript`, `eslint`, the `@types/*`) live in the `catalog:` block of `pnpm-workspace.yaml` and are referenced as `"catalog:"` in each `package.json`. Bump them there, once. React especially must stay single-copy: `packages/ui` is compiled in place via `transpilePackages`, so a drifting range there hands the app a second React and an `Invalid hook call` at runtime.
+
+`eslint-config-next` is pinned in `packages/config` and must be bumped together with `next` in each app — nothing enforces that pairing automatically.
 
 (Update this list as apps/packages are added — keep it accurate, not aspirational.)
 
@@ -35,6 +47,9 @@ Nx here is used for task orchestration/caching across apps, not for generating a
 - `pnpm nx typecheck <app>` — typecheck
 - `pnpm nx test <app>` — unit tests (if/when added)
 - `pnpm nx e2e <app>` — Playwright e2e
+- `pnpm nx run-many -t lint typecheck` — every project at once
+
+Next.js generates route types (`LayoutProps`, `PageProps`) into `.next/types`, so an app's `typecheck` script must run `next typegen` before `tsc --noEmit` or it fails on a clean checkout.
 
 Before considering any task done: lint, typecheck, and relevant e2e must pass.
 

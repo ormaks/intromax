@@ -17,7 +17,7 @@ Foundation everything else builds on — every future app (portfolio, pet projec
 - `packages/ui` — empty/minimal scaffold (package.json + placeholder export), ready for components later
 - `packages/common` — empty/minimal scaffold (package.json + placeholder export), ready for shared utils/types later
 - `apps/portfolio` consumes `packages/config` and `packages/ui` via the pnpm workspace protocol
-- `.nvmrc` pinning Node 22 LTS
+- `.nvmrc` pinning Node 24 LTS (revised from 22 during implementation — the dev machine runs 24 and no version manager is installed, so a 22 pin would have been documentation nothing honored)
 - Root `package.json` with workspace scripts
 - Confirm `pnpm nx dev|build|lint|typecheck portfolio` all run successfully
 - Update `AGENTS.md`'s repo layout section if the real structure ends up differing from the draft
@@ -36,19 +36,23 @@ Foundation everything else builds on — every future app (portfolio, pet projec
 3. Build out `packages/config` with a shared ESLint flat config, a base `tsconfig.json` other packages/apps extend, and a shared Tailwind preset.
 4. Scaffold `packages/ui` and `packages/common` as minimal, real, buildable packages — not just empty folders — each with its own `package.json` and a single placeholder export, wired into `apps/portfolio` so the workspace-protocol linkage is proven to work now rather than discovered broken later.
 5. Wire Nx targets (`dev`, `build`, `lint`, `typecheck`) for `apps/portfolio` and confirm each runs clean.
-6. Add `.nvmrc` (Node 22 LTS).
+6. Add `.nvmrc` (Node 24 LTS).
 7. Reconcile `AGENTS.md`'s repo layout section against what actually got built.
 
 ## Acceptance criteria
 
-- [ ] `pnpm install` succeeds from a clean clone
-- [ ] `pnpm nx dev portfolio` runs and serves the default Next.js page locally
-- [ ] `pnpm nx build portfolio` succeeds
-- [ ] `pnpm nx lint portfolio` and `pnpm nx typecheck portfolio` pass
-- [ ] `apps/portfolio` visibly imports something from both `packages/ui` and `packages/common` (proves the workspace linkage, however trivial)
-- [ ] `.nvmrc` present and correct
-- [ ] `AGENTS.md` repo layout matches reality
+- [x] `pnpm install` succeeds from a clean clone
+- [x] `pnpm nx dev portfolio` runs and serves the default Next.js page locally
+- [x] `pnpm nx build portfolio` succeeds
+- [x] `pnpm nx lint portfolio` and `pnpm nx typecheck portfolio` pass
+- [x] `apps/portfolio` visibly imports something from both `packages/ui` and `packages/common` (proves the workspace linkage, however trivial)
+- [x] `.nvmrc` present and correct
+- [x] `AGENTS.md` repo layout matches reality
 
 ## Open questions
 
-- None blocking — Node version and Nx Cloud already decided (Node 22 LTS; skip Nx Cloud for now). Flag anything else that comes up during setup rather than guessing.
+- None blocking — Node version and Nx Cloud already decided (Node 24 LTS; skip Nx Cloud for now). Flag anything else that comes up during setup rather than guessing.
+
+## Outcome
+
+Implemented. Deviations from the draft above, and why, are recorded in the Stage 1 entry of `docs/PROGRESS.md`.

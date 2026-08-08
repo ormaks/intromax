@@ -1,0 +1,33 @@
+/*
+ * Shared design tokens for every Intromax app.
+ *
+ * Tailwind v4 is CSS-first — there is no tailwind.config.js and no JS `presets`
+ * array, so the shared "preset" is this stylesheet. Apps pull it in after
+ * importing Tailwind itself:
+ *
+ *   @import "tailwindcss";
+ *   @import "@intromax/config/tailwind/theme.css";
+ *
+ * Deliberately near-empty: Stage 2 (design system) is what fills this in.
+ */
+
+/*
+ * Tailwind only scans the importing app's own directory, so class names used
+ * inside packages/ui would never generate utilities. Declaring the source here
+ * rather than per-app means every future app gets it by importing this file.
+ *
+ * Path is relative to this file (packages/config/tailwind/), and resolving to
+ * packages/ui/src depends on pnpm symlinking @intromax/config back to its real
+ * directory. Under a hoisted node-linker it would resolve into node_modules
+ * and silently match nothing — Tailwind does not error on an unmatched
+ * @source. If ui utilities ever vanish from the output, look here first.
+ */
+@source "../../ui/src";
+
+@theme {
+  --color-brand-50: oklch(0.97 0.014 254);
+  --color-brand-500: oklch(0.62 0.19 254);
+  --color-brand-900: oklch(0.38 0.13 254);
+
+  --radius-card: 0.75rem;
+}
