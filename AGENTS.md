@@ -40,6 +40,7 @@ Before considering any task done: lint, typecheck, and relevant e2e must pass.
 
 ## Workflow rules
 
+- **Branching**: one branch per change, always off `main`. Naming: `stage/NN-short-name` for roadmap-stage work (e.g. `stage/01-nx-workspace-scaffolding`), `feat/short-name` or `fix/short-name` for everything after Stage 1. Never commit directly to `main`, including small changes — everything lands as a PR.
 - **Small changes** (styling tweaks, copy edits, config bumps, obvious bug fixes): just do it directly. No spec needed.
 - **Non-trivial changes** (new page, new API/endpoint, data model change, migration of a legacy section, new shared component): write a short spec first using `spec-template.md`, get it reviewed, then implement against it.
 - Never self-merge. All changes land as a PR for human review, even small ones.
