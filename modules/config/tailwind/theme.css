@@ -13,11 +13,11 @@
 
 /*
  * Tailwind only scans the importing app's own directory, so class names used
- * inside packages/ui would never generate utilities. Declaring the source here
+ * inside modules/ui would never generate utilities. Declaring the source here
  * rather than per-app means every future app gets it by importing this file.
  *
- * Path is relative to this file (packages/config/tailwind/), and resolving to
- * packages/ui/src depends on pnpm symlinking @intromax/config back to its real
+ * Path is relative to this file (modules/config/tailwind/), and resolving to
+ * modules/ui/src depends on pnpm symlinking @intromax/config back to its real
  * directory. Under a hoisted node-linker it would resolve into node_modules
  * and silently match nothing — Tailwind does not error on an unmatched
  * @source. If ui utilities ever vanish from the output, look here first.

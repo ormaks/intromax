@@ -40,10 +40,10 @@ importers:
     dependencies:
       '@intromax/common':
         specifier: workspace:*
-        version: link:../../packages/common
+        version: link:../../modules/common
       '@intromax/ui':
         specifier: workspace:*
-        version: link:../../packages/ui
+        version: link:../../modules/ui
       next:
         specifier: 16.3.0
         version: 16.3.0(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -56,7 +56,7 @@ importers:
     devDependencies:
       '@intromax/config':
         specifier: workspace:*
-        version: link:../../packages/config
+        version: link:../../modules/config
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.3
@@ -79,7 +79,7 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
-  packages/common:
+  modules/common:
     devDependencies:
       '@intromax/config':
         specifier: workspace:*
@@ -91,7 +91,7 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
-  packages/config:
+  modules/config:
     dependencies:
       '@eslint/js':
         specifier: ^9.39.5
@@ -113,7 +113,7 @@ importers:
         specifier: 'catalog:'
         version: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
 
-  packages/ui:
+  modules/ui:
     devDependencies:
       '@intromax/config':
         specifier: workspace:*

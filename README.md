@@ -21,7 +21,7 @@ Personal portfolio, rebuilt as an Nx monorepo, doubling as a hands-on testbed fo
 apps/
   portfolio/          # main site
   <pet-project>/       # each pet project is its own app
-packages/
+modules/
   common/              # shared utils, types, hooks
   ui/                  # shared design-system components
   config/              # shared eslint/tsconfig/tailwind config (manual)
@@ -51,7 +51,7 @@ Requires Node 24 (see `.nvmrc`) and pnpm — `pnpm install`, then `pnpm nx dev p
 ## Working in this repo
 
 - Non-trivial changes: write a spec in `docs/specs/` first (`docs/spec-template.md`), then implement.
-- One branch per change (`stage/…`, `feat/…`, `fix/…`), PR to `main`, never commit directly to `main`.
+- One branch per feature (`stage/…`, `feat/…`, `fix/…`), PR to `main`, never commit directly to `main`. Follow-ups to a feature in flight stay on its branch.
 - Agents implement and self-check, then stop — commits, pushes and PRs happen only when I ask for them, after I've read the diff.
 - Full conventions: see `AGENTS.md`.
  

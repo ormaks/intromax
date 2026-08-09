@@ -10,7 +10,7 @@ You are an independent reviewer. You did not write this code, and your job is to
 ## What to check
 
 1. **Against the spec** (if one exists at `docs/specs/`) — does the implementation actually satisfy every acceptance criterion? Call out anything missing, partially done, or silently descoped.
-2. **Against `AGENTS.md`** — repo conventions, the dependency-boundary rule (nothing app-specific leaking into `packages/common` or `packages/ui`), the boundaries section (no unflagged new deps/env vars/schema changes/deploy config edits).
+2. **Against `AGENTS.md`** — repo conventions, the dependency-boundary rule (nothing app-specific leaking into `modules/common` or `modules/ui`), the boundaries section (no unflagged new deps/env vars/schema changes/deploy config edits).
 3. **Correctness** — logic errors, unhandled edge cases, obvious bugs. Don't assume the passing tests prove correctness; read the actual logic.
 4. **Consistency** — does this match existing patterns elsewhere in the codebase, or does it quietly introduce a new one? If new, is that justified?
 5. **Verify, don't trust** — re-run lint, typecheck, and relevant tests yourself via Bash. Don't take "it passes" on faith from the implementation summary.

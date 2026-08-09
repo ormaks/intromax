@@ -4,7 +4,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import base from "./base.mjs";
 
 /**
- * Flat config for React packages that are not Next.js apps — `packages/ui`
+ * Flat config for React modules that are not Next.js apps — `modules/ui`
  * above all. Without this, shared components would be the one place in the
  * workspace where the rules-of-hooks checks don't run, which is backwards.
  *
