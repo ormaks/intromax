@@ -21,7 +21,7 @@ Personal portfolio, rebuilt as an Nx monorepo, doubling as a hands-on testbed fo
 apps/
   portfolio/          # main site
   <pet-project>/       # each pet project is its own app
-packages/
+modules/
   common/              # shared utils, types, hooks
   ui/                  # shared design-system components
   config/              # shared eslint/tsconfig/tailwind config (manual)
@@ -31,12 +31,15 @@ docs/
 .claude/
   agents/
     code-reviewer.md   # read-only review subagent
+  launch.json          # dev-server config for agent-driven local runs
 ```
+
+Requires Node 24 (see `.nvmrc`) and pnpm — `pnpm install`, then `pnpm nx dev portfolio`.
 
 ## Roadmap
 
 - [x] **Stage 0** — Agent workflow setup: `AGENTS.md`, spec template, `code-reviewer` subagent, `.gitignore`
-- [ ] **Stage 1** — Nx workspace + portfolio app scaffolding
+- [x] **Stage 1** — Nx workspace + portfolio app scaffolding
 - [ ] **Stage 2** — Architecture & design system
 - [ ] **Stage 3** — Backend/storage (contact-form endpoint first)
 - [ ] **Stage 4** — Legacy content/design migration
@@ -48,6 +51,7 @@ docs/
 ## Working in this repo
 
 - Non-trivial changes: write a spec in `docs/specs/` first (`docs/spec-template.md`), then implement.
-- One branch per change (`stage/…`, `feat/…`, `fix/…`), PR to `main`, never commit directly to `main`.
+- One branch per feature (`stage/…`, `feat/…`, `fix/…`), PR to `main`, never commit directly to `main`. Follow-ups to a feature in flight stay on its branch.
+- Agents implement and self-check, then stop — commits, pushes and PRs happen only when I ask for them, after I've read the diff.
 - Full conventions: see `AGENTS.md`.
  
