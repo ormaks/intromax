@@ -11,6 +11,10 @@ catalog:
   "@types/react": ^19
   "@types/react-dom": ^19
   eslint: ^9
+  # modules/ui's Link wraps next/link, so next is shared now too. Bumping it
+  # here still means bumping eslint-config-next in modules/config to match —
+  # nothing enforces that pairing automatically (see AGENTS.md).
+  next: 16.3.0
   react: 19.2.8
   react-dom: 19.2.8
   typescript: ^5

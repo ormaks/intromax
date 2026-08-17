@@ -18,6 +18,9 @@ catalogs:
     eslint:
       specifier: ^9
       version: 9.39.5
+    next:
+      specifier: 16.3.0
+      version: 16.3.0
     react:
       specifier: 19.2.8
       version: 19.2.8
@@ -45,7 +48,7 @@ importers:
         specifier: workspace:*
         version: link:../../modules/ui
       next:
-        specifier: 16.3.0
+        specifier: 'catalog:'
         version: 16.3.0(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: 'catalog:'
@@ -127,6 +130,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
+      next:
+        specifier: 'catalog:'
+        version: 16.3.0(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: 'catalog:'
         version: 19.2.8

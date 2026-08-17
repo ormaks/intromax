@@ -21,7 +21,7 @@ React 16.3, class components, custom Webpack 4 + Babel 6 config, `node-sass` (de
 ## Must-preserve elements (personal significance — not optional)
 
 1. **Skills sphere / tag-cloud visualization** — the 3D rotating tag cloud on the Skills page. `TagCanvas` itself is dead technology; needs a modern equivalent (candidates to evaluate in Stage 2/4: `react-tagcloud`, `d3-cloud`, or a custom canvas/WebGL implementation) that reproduces the same rotating-sphere feel.
-2. **Letter-by-letter text-split animation** — the `TextSplit`/`AnimatedText` heading treatment on Home/About/Skills. Straightforward to rebuild cleanly with modern React + CSS/Framer Motion, no legacy dependency needed.
+2. **Per-letter text-split animation** — the `TextSplit`/`AnimatedText` heading treatment on Home/About/Skills. Rebuilt in Stage 2 with CSS keyframes only; no motion library was needed. Note the effect is a per-letter bounce **on hover** (animate.css `rubberBand`, 1s), not an entrance animation on load — "letter-by-letter" here describes the split, not a staggered reveal.
 
 ## Other design signatures worth carrying forward (not personally load-bearing, but part of the site's identity)
 
@@ -40,14 +40,43 @@ React 16.3, class components, custom Webpack 4 + Babel 6 config, `node-sass` (de
 - About page bio — reflects ~2018 career state, needs a full rewrite against current experience (Proffiz, Benamix, Sol-Ra, M-Plus)
 - Skills list — reflects the old stack (AngularJS, .NET, C++, Gulp, jQuery); needs to reflect the current one (React, TypeScript, Next.js, Nx, TanStack Query, etc.)
 
-## Extracted base tokens (from legacy `main.scss`)
+## Extracted base tokens
 
-- Background: `#252627` (dark), text: `#fff`
-- Muted/decorative text (the "code tags" motif): `#515152`
-- Custom cursor image (`cursor.cur`) — nice detail, cheap to reproduce
-- Font roles: a display/heading font (`MyHeader`, mapped to one of the custom `.ttf` files) and a monospace-ish "tag" font (`MyTags`, cursive fallback) for the decorative markup text
-- These are a starting point, not the full palette — per-page SCSS files (`home.scss`, `about.scss`, etc.) likely carry more; worth a deeper pass when Stage 2 actually builds the Tailwind preset
+Stage 2 did the deeper per-page SCSS pass this section originally deferred. The
+values below are the result — the earlier `main.scss`-only list understated both
+the palette and the font roles.
 
-## Implication for packages/ui / design tokens
+**Colors**
 
-The custom fonts and any extractable color/spacing values from the legacy SCSS are worth pulling into `packages/config`'s Tailwind preset / `packages/ui` design tokens early, since the visual identity is meant to persist — no need to reinvent the palette or type scale from scratch in Stage 2.
+| Value | Role | Notes |
+|---|---|---|
+| `#252627` | page background | |
+| `#fff` | body text | |
+| `#08fdd8` | **accent** | The dominant color — 23 uses. Buttons, borders, input underlines, wordmark glow, 404 glitch. Missed entirely by the first pass. |
+| `#515152` | muted / decorative "code tags" text | |
+| `#181818` | raised surface | header rail background |
+| `#4d4d4e` | borders, hairlines | |
+| `#37393b` | form field fill | |
+
+Secondary one-off greys (`#8d8d8d`, `#949292`, `#222324`, `#284641`) are page
+decoration rather than tokens, and are left to the Stage 4 fidelity pass.
+
+**Font roles** — five, not two (`main.scss:81-107`):
+
+| Legacy name | File | Role |
+|---|---|---|
+| `MyHeader` | `Millunium-BOLD.ttf` | headings (`.text_h1`, 56px / 35px mobile) |
+| `MyTags` | `LaBelleAurore.ttf` | the decorative markup text |
+| `MyLogo` | `DancingScript-Regular/Bold.ttf` | the "Ormaks" wordmark |
+| `LogoImg` | `tempsitc.ttf` | secondary logo treatment |
+| — | `"Open Sans"` (web font) | body copy |
+
+**Type scale**: headings 56px/53px line-height, stepping to 35px/30px under
+480px; tag text 18px; small text 11-13px.
+
+Also: custom cursor image (`cursor.cur`) — nice detail, cheap to reproduce,
+not yet migrated.
+
+## Implication for modules/ui / design tokens
+
+The custom fonts and any extractable color/spacing values from the legacy SCSS are worth pulling into `modules/config`'s Tailwind preset / `modules/ui` design tokens early, since the visual identity is meant to persist — no need to reinvent the palette or type scale from scratch in Stage 2.

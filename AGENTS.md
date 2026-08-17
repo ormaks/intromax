@@ -36,11 +36,54 @@ Shared code lives in `modules/`, not the conventional `packages/` — the npm sc
 
 **Apps keep `app/` at the app root — no `src/` directory.** Modules do use `src/`. This asymmetry is deliberate, not an oversight: `app/` is Next's App Router directory, and apps have few enough root-level files that another nesting level buys nothing. Don't "fix" it.
 
+### Component layout
+
+One folder per component, everywhere — `modules/ui/src/` and an app's `app/components/` alike:
+
+```
+button/
+  index.ts      re-exports the component and its prop types
+  Button.tsx    the component
+```
+
+Folder names are `camelCase` (`textArea/`, `textSplit/`), files are `PascalCase` and match the component they export. A folder holds extra files when the component genuinely has parts (`header/BurgerMenu.tsx`); styling helpers shared by two components go in `src/utils/` rather than in one of their folders. Barrel exports go through the folder's `index.ts`, and `modules/ui/src/index.ts` re-exports the public surface.
+
+An app's `app/components/` needs no `_` prefix — a folder under `app/` only becomes a route if it contains a `page.tsx`.
+
+### App-level layout inside `app/`
+
+`app/` holds as little as Next actually requires directly inside it, plus organizational folders:
+
+```
+app/
+  layout.tsx          root layout — Next requires this exact location
+  not-found.tsx        global 404 — see note below, also root-only
+  favicon.ico
+  (pages)/            every route, grouped
+    page.tsx           "/" — the index route has no folder of its own; see note below
+    about/page.tsx
+    contact/page.tsx
+  components/          app-local components (Header, TextSplit, ...)
+  styles/              globals.css, fonts.ts
+```
+
+`(pages)` is a Next **route group** — a folder wrapped in parens is stripped from the URL, so `app/(pages)/about/page.tsx` still serves `/about`. It exists purely so `app/` itself isn't a flat mix of route folders and organizational ones; every actual page lives inside it, one folder per route, `page.tsx` as the entry.
+
+Two things can't move into the group, both confirmed by testing rather than assumed:
+- **`layout.tsx`** — the root layout must be direct child of `app/`; Next won't find it inside a group.
+- **`not-found.tsx`** — moving it into `(pages)/` silently breaks the global 404: unmatched top-level paths fell back to Next's plain default page instead of the custom one. Root-level `app/not-found.tsx` is the only placement that catches genuinely unmatched routes; a route group's own `not-found.tsx` only catches `notFound()` calls thrown from within that group.
+
+The index route (`/`) has no dedicated folder the way `/about` does — `(pages)/page.tsx` sits directly in the group, because Next has no way to give the empty path a named wrapper folder without changing the URL. This is a one-time exception, not a pattern to extend.
+
+Route implementations live directly in each route's `page.tsx`, not behind a re-export from a separate views folder. Cross-file imports inside `app/` use the `@/*` path alias (already declared in `tsconfig.json`, mapped to the app root) rather than relative paths — `@/app/components/header`, not `../../components/header` — so import paths don't get uglier as routes nest deeper inside `(pages)/`.
+
 (Update this list as apps/modules are added — keep it accurate, not aspirational.)
 
 ### Dependency boundary rule
 
 `modules/common` and `modules/ui` must stay lean. Only add a dependency there if 2+ apps actually need it. App-specific libraries (e.g. Three.js, GSAP, an animation lib for one pet project) live in that app's own `package.json`, never in a shared package. If unsure whether something belongs in shared or app-local, default to app-local and flag it — moving something into shared later is cheap, walking back a shared dependency that's now used everywhere is not.
+
+**`modules/ui` depends on `next`** (peer dependency, catalog-pinned) because its `Link` wraps `next/link` — the fast, no-full-reload navigation Next apps expect, instead of a plain `<a>`. This is the one thing that would stop a non-Next app from using `modules/ui`. Every app in the workspace is a Next app today, so it isn't blocking anything yet, but it's worth remembering next time a pet project isn't Next-based.
 
 ## Commands
 
