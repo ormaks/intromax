@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Header } from "@/app/components/header";
-import { Preloader } from "@/app/components/preloader";
-import { fontVariables } from "@/app/styles/fonts";
-import "@/app/styles/globals.css";
+import { Header } from "@/components/header";
+import { Preloader } from "@/components/preloader";
+import { fontVariables } from "@/styles/fonts";
+import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: "Ormaks — Maks Chytailo",

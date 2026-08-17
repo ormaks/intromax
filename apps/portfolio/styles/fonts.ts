@@ -27,14 +27,14 @@ import localFont from "next/font/local";
 
 /** Legacy `MyHeader` — page headings. The only display face above the fold. */
 export const heading = localFont({
-  src: "../../../../modules/config/tailwind/fonts/Millunium-BOLD.ttf",
+  src: "../../../modules/config/tailwind/fonts/Millunium-BOLD.ttf",
   variable: "--font-millunium",
   display: "swap",
 });
 
 /** Legacy `MyTags` — the muted "code tags" decorative text. */
 export const tag = localFont({
-  src: "../../../../modules/config/tailwind/fonts/LaBelleAurore.ttf",
+  src: "../../../modules/config/tailwind/fonts/LaBelleAurore.ttf",
   variable: "--font-la-belle-aurore",
   display: "swap",
   // Decorative and small; not worth blocking the preload budget for.
@@ -45,12 +45,12 @@ export const tag = localFont({
 export const logo = localFont({
   src: [
     {
-      path: "../../../../modules/config/tailwind/fonts/DancingScript-Regular.ttf",
+      path: "../../../modules/config/tailwind/fonts/DancingScript-Regular.ttf",
       weight: "400",
       style: "normal",
     },
     {
-      path: "../../../../modules/config/tailwind/fonts/DancingScript-Bold.ttf",
+      path: "../../../modules/config/tailwind/fonts/DancingScript-Bold.ttf",
       weight: "700",
       style: "normal",
     },

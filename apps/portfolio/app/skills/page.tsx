@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Card, Container, Heading, Text } from "@intromax/ui";
-import { CodeTag } from "@/app/components/codeTag";
-import { TextSplit } from "@/app/components/textSplit";
+import { CodeTag } from "@/components/codeTag";
+import { TextSplit } from "@/components/textSplit";
 
 export const metadata: Metadata = {
   title: "Skills — Ormaks",

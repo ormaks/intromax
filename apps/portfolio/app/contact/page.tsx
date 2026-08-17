@@ -8,8 +8,8 @@ import {
   Text,
   TextArea,
 } from "@intromax/ui";
-import { CodeTag } from "@/app/components/codeTag";
-import { TextSplit } from "@/app/components/textSplit";
+import { CodeTag } from "@/components/codeTag";
+import { TextSplit } from "@/components/textSplit";
 
 export const metadata: Metadata = {
   title: "Contact — Ormaks",

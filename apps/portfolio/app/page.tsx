@@ -1,6 +1,6 @@
 import { ButtonLink, Container, Heading, Text } from "@intromax/ui";
-import { CodeTag } from "@/app/components/codeTag";
-import { TextSplit } from "@/app/components/textSplit";
+import { CodeTag } from "@/components/codeTag";
+import { TextSplit } from "@/components/textSplit";
 
 /*
  * min-h-[80vh]: vertical centering with room for the header on mobile, not a

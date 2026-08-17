@@ -1,6 +1,6 @@
 import { Container, Heading, Link } from "@intromax/ui";
-import { CodeTag } from "@/app/components/codeTag";
-import { TextSplit } from "@/app/components/textSplit";
+import { CodeTag } from "@/components/codeTag";
+import { TextSplit } from "@/components/textSplit";
 
 // Same reasoning as the home page's min-h-[80vh]: no scale equivalent.
 export default function NotFound() {
