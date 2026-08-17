@@ -40,9 +40,9 @@ Requires Node 24 (see `.nvmrc`) and pnpm — `pnpm install`, then `pnpm nx dev p
 
 - [x] **Stage 0** — Agent workflow setup: `AGENTS.md`, spec template, `code-reviewer` subagent, `.gitignore`
 - [x] **Stage 1** — Nx workspace + portfolio app scaffolding
-- [ ] **Stage 2** — Architecture & design system
+- [x] **Stage 2** — Architecture & design system
 - [ ] **Stage 3** — Backend/storage (contact-form endpoint first)
-- [ ] **Stage 4** — Legacy content/design migration
+- [ ] **Stage 4** — Legacy content/design migration — blocked on `TextSplit` getting a link-wrapper mode before the Skills page's content lands (see `docs/PROGRESS.md`, Stage 2 "Known leftovers")
 - [ ] **Stage 5** — Pet-projects section + barbershop duplicate
 - [ ] **Stage 6** — Cloudflare CI/CD
 - [ ] **Stage 7** — Testing & ongoing agent loop

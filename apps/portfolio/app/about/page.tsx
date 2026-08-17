@@ -17,9 +17,16 @@ export default function AboutPage() {
       <CodeTag name="h1" closing />
 
       <Card className="max-w-prose">
+        {/*
+         * Word-split, matching the legacy About page's own prose treatment
+         * (`splitBy="words"` throughout `About.js`) — headings split by
+         * letter, body copy splits by word.
+         */}
         <Text>
-          Placeholder bio. The legacy copy predates most of the work worth
-          mentioning, so it is being rewritten rather than ported — Stage 4.
+          <TextSplit byWord>
+            Placeholder bio. The legacy copy predates most of the work worth
+            mentioning, so it is being rewritten rather than ported — Stage 4.
+          </TextSplit>
         </Text>
       </Card>
     </Container>
