@@ -8,7 +8,9 @@
  *   @import "tailwindcss";
  *   @import "@intromax/config/tailwind/theme.css";
  *
- * Deliberately near-empty: Stage 2 (design system) is what fills this in.
+ * Values are extracted from the legacy site (ormaks/react-portfolio,
+ * `src/css/*.scss`) — see docs/legacy-audit.md. The rebuild preserves the
+ * visual identity deliberately, so these are migrated values, not new ones.
  */
 
 /*
@@ -25,9 +27,77 @@
 @source "../../ui/src";
 
 @theme {
-  --color-brand-50: oklch(0.97 0.014 254);
-  --color-brand-500: oklch(0.62 0.19 254);
-  --color-brand-900: oklch(0.38 0.13 254);
+  /*
+   * Palette. The site is dark-only by design — there is no light theme to
+   * pair these with, so they are plain values rather than a var indirection.
+   */
+  --color-background: #252627;
+  --color-foreground: #ffffff;
+  /* The decorative "code tags" motif — deliberately low contrast. */
+  --color-muted: #515152;
+  /* The signature teal: buttons, borders, links, wordmark glow, 404 glitch. */
+  --color-accent: #08fdd8;
+  --color-surface: #181818;
+  --color-border: #4d4d4e;
+  /* Form field fill — legacy contact.scss gives inputs their own grey. */
+  --color-field: #37393b;
+  /* Legacy `.error` is a red border-bottom; no other error styling existed. */
+  --color-danger: #ff4d4d;
 
-  --radius-card: 0.75rem;
+  /*
+   * Font roles map to the raw per-file variables an app's next/font setup
+   * defines (see apps/portfolio/app/fonts.ts). The indirection is what lets
+   * the role names live here, shared, while file loading stays per-app.
+   *
+   * The raw names are deliberately different from the role names: next/font
+   * sets its variable on the <html> element, and @theme emits :root — same
+   * specificity, so reusing a name would make which one wins a coin flip.
+   *
+   * Legacy names are in comments for anyone diffing against main.scss.
+   */
+  --font-sans: var(--font-open-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-millunium), ui-sans-serif, sans-serif; /* MyHeader */
+  --font-tag: var(--font-la-belle-aurore), cursive; /* MyTags */
+  --font-logo: var(--font-dancing-script), cursive; /* MyLogo */
+  /* LogoImg. No app loads tempsitc.ttf yet — its consumer is the Stage 4
+     wordmark — so this currently resolves to the fallback. */
+  --font-logo-alt: var(--font-tempus), ui-sans-serif, sans-serif;
+
+  /*
+   * Type scale, anchored on the legacy values rather than invented steps:
+   * headings 56px, tag text 18px, small text 11-13px. The heading step happens
+   * at 480px, which is not a Tailwind breakpoint — see Heading.tsx.
+   */
+  --text-tag: 1.125rem; /* 18px */
+  --text-tag--line-height: 1.4;
+  --text-heading: 3.5rem; /* 56px */
+  --text-heading--line-height: 0.95; /* legacy 53px on 56px */
+  --text-heading-sm: 2.1875rem; /* 35px, the <480px step */
+  --text-heading-sm--line-height: 0.86; /* legacy 30px on 35px */
+
+  --tracking-button: 0.1875em; /* legacy .contact_btn letter-spacing: 3px */
+  --text-button: 0.8125rem; /* 13px, legacy .contact_btn font-size */
+
+  /*
+   * Named sizes for exact legacy pixel values that recur across components.
+   * Each of these existed as a repeated `rounded-[3px]` / `w-[55px]` / etc.
+   * arbitrary value before — giving it a theme key means Tailwind generates
+   * the matching utility (`rounded-control`, `w-header`, `h-field`) instead
+   * of the value being retyped, and drifting, at every call site.
+   */
+  --radius-control: 3px; /* the site's one border-radius, on every button/card/field */
+  --width-header: 3.4375rem; /* 55px, the legacy header rail width */
+  --height-field: 3.125rem; /* 50px, legacy contact.scss input height */
+
+  /*
+   * Not every pixel value earned a token. `min-h-[150px] max-h-[250px]` on
+   * TextArea (legacy contact.scss) is single-use and doesn't land on any
+   * rounding of Tailwind's 4px scale without losing the exact legacy number
+   * for no real benefit — left as arbitrary values there deliberately.
+   */
+
+  /* The legacy heading breakpoint (main.scss's 480px media query) isn't one
+     of Tailwind's defaults — declaring it here generates a real `xs:` variant
+     instead of a one-off `min-[480px]:` arbitrary variant. */
+  --breakpoint-xs: 30rem; /* 480px */
 }

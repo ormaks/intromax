@@ -36,11 +36,54 @@ Shared code lives in `modules/`, not the conventional `packages/` — the npm sc
 
 **Apps keep `app/` at the app root — no `src/` directory.** Modules do use `src/`. This asymmetry is deliberate, not an oversight: `app/` is Next's App Router directory, and apps have few enough root-level files that another nesting level buys nothing. Don't "fix" it.
 
+### Component layout
+
+One folder per component, everywhere — `modules/ui/src/` and an app's `components/` alike:
+
+```
+button/
+  index.ts      re-exports the component and its prop types
+  Button.tsx    the component
+```
+
+Folder names are `camelCase` (`textArea/`, `textSplit/`), files are `PascalCase` and match the component they export. A folder holds extra files when the component genuinely has parts (`header/BurgerMenu.tsx`); styling helpers shared by two components go in `src/utils/` rather than in one of their folders. Barrel exports go through the folder's `index.ts`, and `modules/ui/src/index.ts` re-exports the public surface.
+
+### App root layout
+
+`app/` holds routes and only the two special files Next requires directly inside it — everything else lives beside it as a top-level sibling, standard Next.js convention:
+
+```
+apps/portfolio/
+  app/
+    layout.tsx        root layout — Next requires this exact location
+    not-found.tsx     global 404 — see note below, also root-only
+    page.tsx           "/"
+    about/page.tsx
+    contact/page.tsx
+  components/          app-local components (Header, TextSplit, ...)
+  styles/              globals.css, fonts.ts
+  public/              favicon.ico, static assets
+```
+
+Routes are flat, real folders under `app/` — `app/about/page.tsx` serves `/about` directly. No route group is needed: an earlier pass wrapped every route in `app/(pages)/` to keep `app/` from mixing route folders with `components/`/`styles/`, but moving those two out to the app root removes the reason for the group entirely, and flat routing is what most Next.js docs and templates assume.
+
+Two files are pinned to `app/` itself and can't move, confirmed by testing rather than assumed:
+- **`layout.tsx`** — the root layout must be a direct child of `app/`.
+- **`not-found.tsx`** — wrapping it in any folder (tested: a route group, even a dedicated empty one) silently breaks the global 404 — unmatched top-level paths fall back to Next's plain default page instead of the custom one.
+
+Route implementations live directly in each route's `page.tsx`, not behind a re-export from a separate views folder. Cross-file imports use the `@/*` path alias (declared in `tsconfig.json`, mapped to the app root) rather than relative paths — `@/components/header`, not `../../components/header`.
+
+`lib/`, `hooks/`, `utils/`, `types/` aren't created yet — nothing in the app needs them. Add each when a real piece of shared logic, a custom hook, or a cross-page type actually shows up; an empty folder isn't worth the placeholder.
+
 (Update this list as apps/modules are added — keep it accurate, not aspirational.)
 
 ### Dependency boundary rule
 
 `modules/common` and `modules/ui` must stay lean. Only add a dependency there if 2+ apps actually need it. App-specific libraries (e.g. Three.js, GSAP, an animation lib for one pet project) live in that app's own `package.json`, never in a shared package. If unsure whether something belongs in shared or app-local, default to app-local and flag it — moving something into shared later is cheap, walking back a shared dependency that's now used everywhere is not.
+
+**`modules/ui` depends on `next`** (peer dependency, catalog-pinned) because `Link` and `ButtonLink` both wrap `next/link` — the fast, no-full-reload navigation Next apps expect, instead of a plain `<a>`. This is the one thing that would stop a non-Next app from using `modules/ui` at all: both live in the main barrel alongside the framework-agnostic primitives, so importing anything from `@intromax/ui` pulls in `next/link`. Every app in the workspace is a Next app today, so it isn't blocking anything yet, but it's worth remembering next time a pet project isn't Next-based — a genuinely non-Next app would need `Link`/`ButtonLink` split out (e.g. behind a separate subpath export) before it could use the rest of this package.
+
+**`modules/ui` also depends on `classnames`** — the `cn` helper (`utils/cn.ts`) is a thin re-export of it, not a hand-rolled join/filter. Small and self-contained enough that it doesn't carry the same single-copy risk `react`/`next` do, so it's a plain dependency, not catalog-pinned. Build className strings with `cn(...)` everywhere a class is conditional — `condition && "class"` or `condition ? "a" : "b"` as separate arguments — rather than `+` string concatenation or a template literal with an embedded ternary.
 
 ## Commands
 
