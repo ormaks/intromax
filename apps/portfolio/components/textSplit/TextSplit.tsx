@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@intromax/ui";
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 type TextSplitProps = {
   /** Plain text — this splits per unit, so it cannot take elements. */
@@ -37,6 +37,14 @@ function AnimatedUnit({ text }: { text: string }) {
     clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => setIsAnimating(false), 1000);
   };
+
+  // Legacy TextAnimation.js never cleared this timer on unmount either — but
+  // that was a side effect of being an old class component with no
+  // componentWillUnmount, not a behavior worth carrying forward. This is a
+  // client component that unmounts for real on next/link navigation (a click
+  // mid-bounce is routine), so an uncleared timeout would call setState on an
+  // unmounted unit.
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
   return (
     <span

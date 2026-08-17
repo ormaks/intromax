@@ -83,6 +83,8 @@ Route implementations live directly in each route's `page.tsx`, not behind a re-
 
 **`modules/ui` depends on `next`** (peer dependency, catalog-pinned) because `Link` and `ButtonLink` both wrap `next/link` — the fast, no-full-reload navigation Next apps expect, instead of a plain `<a>`. This is the one thing that would stop a non-Next app from using `modules/ui` at all: both live in the main barrel alongside the framework-agnostic primitives, so importing anything from `@intromax/ui` pulls in `next/link`. Every app in the workspace is a Next app today, so it isn't blocking anything yet, but it's worth remembering next time a pet project isn't Next-based — a genuinely non-Next app would need `Link`/`ButtonLink` split out (e.g. behind a separate subpath export) before it could use the rest of this package.
 
+**`modules/ui` also depends on `classnames`** — the `cn` helper (`utils/cn.ts`) is a thin re-export of it, not a hand-rolled join/filter. Small and self-contained enough that it doesn't carry the same single-copy risk `react`/`next` do, so it's a plain dependency, not catalog-pinned. Build className strings with `cn(...)` everywhere a class is conditional — `condition && "class"` or `condition ? "a" : "b"` as separate arguments — rather than `+` string concatenation or a template literal with an embedded ternary.
+
 ## Commands
 
 - `pnpm install` — install deps at the workspace root

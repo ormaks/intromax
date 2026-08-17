@@ -14,7 +14,7 @@ Foundation for every page and every future pet-project app. Getting tokens and t
 - `modules/config` Tailwind preset: colors, font roles, and spacing extracted from the legacy audit (`docs/legacy-audit.md`) — dark background `#252627`, text `#fff`, muted decorative-text color `#515152`, accent `#08fdd8`, the five custom font roles, custom font files migrated as shared assets
 - `modules/ui` package scaffold (real, buildable, consumed via workspace protocol — not a stub)
 - Layer 1 primitives: Button, Input, Textarea, Card, Link, Typography (heading/body components mapped to the font tokens), Container/layout wrapper
-- Layer 2 signature components: `TextSplit` (letter-by-letter animation, rebuilt clean — no legacy dependency), `Preloader`
+- Layer 2 signature components: `TextSplit` (letter/word-split animation, rebuilt clean — no legacy dependency), `Preloader` — shipped app-local (`apps/portfolio/components/`) rather than in `modules/ui`; see "Deviation" under Acceptance criteria
 - Minimal page shells in `apps/portfolio` for Home, About, Skills, Contact, NotFound — enough structure/routing to actually exercise every new component, without full legacy content or pixel-perfect fidelity yet
 - No Storybook / isolated component preview — components are built and reviewed directly on their real pages
 
@@ -36,12 +36,16 @@ Foundation for every page and every future pet-project app. Getting tokens and t
 
 ## Acceptance criteria
 
-- [ ] `modules/config` Tailwind preset reflects the extracted legacy tokens (colors, all five font roles)
-- [ ] Custom font files present as assets and actually rendering in `apps/portfolio`
-- [ ] `modules/ui` exports Button, Input, Textarea, Card, Link, Typography, Container, `TextSplit`, `Preloader` — each consumed at least once in a real `apps/portfolio` page
-- [ ] Home/About/Skills/Contact/NotFound page shells exist and route correctly (content can be placeholder)
-- [ ] `TextSplit` visibly reproduces the legacy per-letter hover bounce
-- [ ] Lint, typecheck, build all pass
+- [x] `modules/config` Tailwind preset reflects the extracted legacy tokens (colors, all five font roles)
+- [x] Custom font files present as assets and actually rendering in `apps/portfolio` — four of five; `tempsitc.ttf` (`LogoImg`) is present and token-mapped but has no consumer yet, since its only use is the Stage 4 mirrored wordmark. Disclosed in `theme.css` and `docs/PROGRESS.md`, not a gap that was missed.
+- [x] `modules/ui` exports Button, Input, TextArea, Card, Link, Typography, Container — each consumed at least once in a real `apps/portfolio` page. **`TextSplit` and `Preloader` do not live in `modules/ui`** — see "Deviation" below; both are still consumed at least once, just from `apps/portfolio/components/` instead.
+- [x] Home/About/Skills/Contact/NotFound page shells exist and route correctly (content can be placeholder)
+- [x] `TextSplit` visibly reproduces the legacy per-letter hover bounce, and word-splitting (`byWord`) for body prose
+- [x] Lint, typecheck, build all pass
+
+### Deviation: `TextSplit` and `Preloader` are app-local, not `modules/ui`
+
+This spec's original scope (line 17) named both as `modules/ui` "Layer 2" components. They ended up in `apps/portfolio/components/` instead, under AGENTS.md's dependency-boundary default ("if unsure whether something belongs in shared or app-local, default to app-local and flag it"): both encode portfolio-specific behavior (`Preloader`'s copy, `TextSplit`'s legacy-matched timing) rather than being generic primitives, and nothing else in the workspace needs them yet. The call was made and documented in `modules/ui/src/index.ts`'s own barrel comment at the time, but never reconciled back against this spec's acceptance criteria — caught in the Stage 2 closing review rather than during implementation. Recorded here so the acceptance criteria reflect what actually shipped.
 
 ## Open questions
 

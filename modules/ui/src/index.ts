@@ -3,7 +3,7 @@
  *
  * Generic primitives only. Anything that encodes one app's nav, branding or
  * copy stays in that app (see AGENTS.md) — the portfolio's Header, TextSplit
- * and Preloader live in apps/portfolio/app/components for that reason.
+ * and Preloader live in apps/portfolio/components for that reason.
  *
  * `Link` and `ButtonLink` wrap `next/link`, which is what puts `next` in this
  * module's peerDependencies — every app in the workspace is a Next app today,
@@ -27,4 +27,3 @@ export { Heading, Text } from "./typography";
 export type { HeadingProps, TextProps } from "./typography";
 
 export { cn } from "./utils/cn";
-export type { ClassValue } from "./utils/cn";

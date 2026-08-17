@@ -1,6 +1,6 @@
 "use client";
 
-import { Link } from "@intromax/ui";
+import { cn, Link } from "@intromax/ui";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { BurgerMenu } from "./BurgerMenu";
@@ -48,13 +48,13 @@ export function Header() {
 
   return (
     <header
-      className={
+      className={cn(
+        "relative z-30 flex w-full flex-row items-center justify-between bg-surface",
         // `relative` is load-bearing: the mobile panel below is positioned
         // `top-full`, and without a positioned ancestor it resolves against
         // the viewport and drops a full screen height out of view.
-        "relative z-30 flex w-full flex-row items-center justify-between bg-surface " +
-        "sm:fixed sm:inset-y-0 sm:left-0 sm:h-full sm:w-header sm:flex-col sm:py-2"
-      }
+        "sm:fixed sm:inset-y-0 sm:left-0 sm:h-full sm:w-header sm:flex-col sm:py-2",
+      )}
     >
       <Link
         href="/"
@@ -71,11 +71,11 @@ export function Header() {
        */}
       <div
         id={NAV_ID}
-        className={
-          "absolute inset-x-0 top-full flex-col gap-6 bg-surface p-4 " +
-          "sm:static sm:flex sm:h-full sm:flex-1 sm:justify-between sm:bg-transparent sm:p-0 " +
-          (isOpen ? "flex" : "hidden")
-        }
+        className={cn(
+          "absolute inset-x-0 top-full flex-col gap-6 bg-surface p-4",
+          "sm:static sm:flex sm:h-full sm:flex-1 sm:justify-between sm:bg-transparent sm:p-0",
+          isOpen ? "flex" : "hidden",
+        )}
       >
         <nav
           aria-label="Primary"
@@ -90,9 +90,10 @@ export function Header() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 onClick={() => setIsOpen(false)}
-                className={`text-center text-xs uppercase tracking-widest ${
-                  active ? "text-accent" : "text-foreground hover:text-accent"
-                }`}
+                className={cn(
+                  "text-center text-xs uppercase tracking-widest",
+                  active ? "text-accent" : "text-foreground hover:text-accent",
+                )}
               >
                 {item.label}
               </Link>

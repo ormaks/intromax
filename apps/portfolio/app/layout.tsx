@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cn } from "@intromax/ui";
 import { Header } from "@/components/header";
 import { Preloader } from "@/components/preloader";
 import { fontVariables } from "@/styles/fonts";
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${fontVariables} h-full antialiased`}>
+    <html lang="en" className={cn(fontVariables, "h-full antialiased")}>
       <body className="min-h-full flex flex-col font-sans">
         <Preloader />
 
