@@ -14,7 +14,8 @@
     "@intromax/ui": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "resend": "^6.20.0"
   },
   "devDependencies": {
     "@intromax/config": "workspace:*",

@@ -60,6 +60,7 @@ apps/portfolio/
     page.tsx           "/"
     about/page.tsx
     contact/page.tsx
+  actions/             Server Actions ('use server'), one file per feature (contact.ts, ...)
   components/          app-local components (Header, TextSplit, ...)
   styles/              globals.css, fonts.ts
   public/              favicon.ico, static assets
