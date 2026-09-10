@@ -23,6 +23,8 @@ export { Link } from "./link";
 export type { LinkProps } from "./link";
 export { TextArea } from "./textArea";
 export type { TextAreaProps } from "./textArea";
+export { ToastHost, toastError, toastInfo, toastSuccess } from "./toast";
+export type { ToastVariant } from "./toast";
 export { Heading, Text } from "./typography";
 export type { HeadingProps, TextProps } from "./typography";
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cn } from "@intromax/ui";
+import { cn, ToastHost } from "@intromax/ui";
 import { Header } from "@/components/header";
 import { Preloader } from "@/components/preloader";
 import { fontVariables } from "@/styles/fonts";
@@ -15,6 +15,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={cn(fontVariables, "h-full antialiased")}>
       <body className="min-h-full flex flex-col font-sans">
         <Preloader />
+        <ToastHost />
 
         {/* The nav rail precedes content on every route. */}
         <a
