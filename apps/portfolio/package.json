@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@intromax/common": "workspace:*",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@intromax/config": "workspace:*",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "catalog:",
     "@types/react": "catalog:",

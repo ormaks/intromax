@@ -2,18 +2,70 @@
 @import "@intromax/config/tailwind/theme.css";
 
 /*
- * The legacy site is dark-only — one background, one text color, no
+ * The site is dark-only — one background, one text color, no
  * prefers-color-scheme branch. Tokens come from the shared theme; this file
  * only applies them and holds the app's own keyframes.
  */
-body {
-  background: var(--color-background);
-  color: var(--color-foreground);
+@layer base {
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    /* Deliberate: text on the site isn't selectable. Form fields still are
+       (browsers exempt editable content). */
+    user-select: none;
+  }
+
+  /*
+   * The teal arrow cursor on everything, inputs included — deliberately,
+   * it's part of the site's look. PNG rather than .cur, whose support outside
+   * Chrome/Firefox is patchy; 7 7 is the arrow's tip.
+   */
+  *,
+  *::before,
+  *::after {
+    cursor:
+      url("/cursor.png") 7 7,
+      pointer !important;
+  }
+
+  /* High-contrast mode can make a custom cursor invisible — hand it back to
+     the system there. */
+  @media (forced-colors: active) {
+    *,
+    *::before,
+    *::after {
+      cursor: auto !important;
+    }
+  }
+
+  /*
+   * :focus-visible, not :focus — mouse users see no outline, keyboard users
+   * always see where they are.
+   */
+  :focus-visible {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 }
 
 /*
- * Per-letter hover bounce for TextSplit. The legacy site got this from
- * animate.css's `rubberBand`; reproduced here so nothing new is installed.
+ * Desktop pages don't scroll above 1024px — each page is sized to the
+ * viewport by PageShell.
+ *
+ * The min-height is the escape hatch: PageShell's page area is `top: 5%` +
+ * at least 566px, which only fits a viewport of ~596px or taller
+ * (566 + 5% of 596 ≈ 596). Below that the page scrolls rather than clipping.
+ */
+@media (min-width: 64.0625rem) and (min-height: 596px) {
+  html,
+  body {
+    overflow: hidden;
+  }
+}
+
+/*
+ * Per-letter hover bounce for TextSplit — a rubber-band squash and stretch.
+ * Plain keyframes; no animation library needed.
  */
 @keyframes rubber-band {
   0% {
@@ -39,7 +91,7 @@ body {
   }
 }
 
-/* Preloader: the legacy `foldthecube` folding-square loader. */
+/* Preloader: the folding-square cube. */
 @keyframes fold-cube {
   0%,
   10% {
@@ -58,7 +110,19 @@ body {
   }
 }
 
-/* Preloader: the legacy `fill-1` progress sweep. */
+/* Preloader: the label's fade-up. */
+@keyframes preloader-label {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+}
+
+/* Preloader: the progress sweep. */
 @keyframes progress-fill {
   0% {
     width: 0;

@@ -21,7 +21,7 @@ export function BurgerMenu({ isOpen, onToggle, controls }: BurgerMenuProps) {
       aria-expanded={isOpen}
       aria-controls={controls}
       aria-label={isOpen ? "Close menu" : "Open menu"}
-      className="flex h-11 w-11 flex-col items-center justify-center gap-1.5 sm:hidden"
+      className="flex h-11 w-11 flex-col items-center justify-center gap-1.5 desktop:hidden"
     >
       <span
         className={cn(

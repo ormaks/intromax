@@ -2,9 +2,8 @@ import { Open_Sans } from "next/font/google";
 import localFont from "next/font/local";
 
 /*
- * The display faces are the legacy site's, migrated as-is from
- * ormaks/react-portfolio (`src/fonts/`). They live in @intromax/config so a
- * future app inherits the files rather than re-copying them.
+ * The display faces live in @intromax/config so a future app inherits the
+ * files rather than re-copying them.
  *
  * The `src` values are plain relative filesystem paths out of this app and
  * into a sibling package's directory — next/font/local does not resolve
@@ -19,20 +18,16 @@ import localFont from "next/font/local";
  * not --font-heading), because theme.css emits its role variables on :root
  * while next/font sets these on <html> — identical specificity, so a shared
  * name would make which declaration wins arbitrary.
- *
- * `tempsitc.ttf` (legacy `LogoImg`) is deliberately not loaded: its only
- * consumer is the mirrored wordmark, which is Stage 4. The file stays in
- * @intromax/config, ready for it.
  */
 
-/** Legacy `MyHeader` — page headings. The only display face above the fold. */
+/** Millunium — page headings. The only display face above the fold. */
 export const heading = localFont({
   src: "../../../modules/config/tailwind/fonts/Millunium-BOLD.ttf",
   variable: "--font-millunium",
   display: "swap",
 });
 
-/** Legacy `MyTags` — the muted "code tags" decorative text. */
+/** La Belle Aurore — the muted "code tags" decorative text. */
 export const tag = localFont({
   src: "../../../modules/config/tailwind/fonts/LaBelleAurore.ttf",
   variable: "--font-la-belle-aurore",
@@ -41,7 +36,7 @@ export const tag = localFont({
   preload: false,
 });
 
-/** Legacy `MyLogo` — the "Ormaks" wordmark. */
+/** Dancing Script — the "Ormaks" wordmark. */
 export const logo = localFont({
   src: [
     {
@@ -61,7 +56,9 @@ export const logo = localFont({
   preload: false,
 });
 
-/** Legacy body copy was `"Open Sans", sans-serif`. */
+/**
+ * Open Sans — buttons only. Page prose is the system monospace stack.
+ */
 export const sans = Open_Sans({
   subsets: ["latin"],
   variable: "--font-open-sans",

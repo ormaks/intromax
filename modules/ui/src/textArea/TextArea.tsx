@@ -2,15 +2,15 @@ import { useId, type TextareaHTMLAttributes } from "react";
 import { cn } from "../utils/cn";
 
 export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
-  /** Renders the legacy red underline plus an inline message below the field. */
+  /** Renders a red underline plus an inline message below the field. */
   error?: string;
   /** Label text rendered above the field. Omit to render just the textarea. */
   label?: string;
 };
 
 /**
- * Input's multi-line sibling. Legacy `contact.scss` fixes the height between
- * 150px and 250px and allows vertical resize only.
+ * Input's multi-line sibling. Height stays between 150px and 250px, with
+ * vertical resize only.
  */
 export function TextArea({
   className,

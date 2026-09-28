@@ -4,7 +4,7 @@ import { cn } from "../utils/cn";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
-/** The legacy `.contact_btn` treatment on a real button. */
+/** The site's button treatment on a real `<button>`. */
 export function Button({ className, type = "button", ...props }: ButtonProps) {
   return (
     <button

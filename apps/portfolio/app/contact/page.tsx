@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Card, Container, Heading } from "@intromax/ui";
+import { Card, Heading } from "@intromax/ui";
 import { CodeTag } from "@/components/codeTag";
+import { PageShell } from "@/components/pageShell";
 import { ContactForm } from "@/components/contactForm";
 import { TextSplit } from "@/components/textSplit";
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <Container className="flex flex-col gap-6">
+    <PageShell className="flex flex-col gap-6">
       <CodeTag name="h1" />
       <Heading>
         <TextSplit>Contact me</TextSplit>
@@ -20,6 +21,6 @@ export default function ContactPage() {
       <Card className="max-w-xl">
         <ContactForm />
       </Card>
-    </Container>
+    </PageShell>
   );
 }

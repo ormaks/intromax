@@ -68,14 +68,52 @@ decoration rather than tokens, and are left to the Stage 4 fidelity pass.
 | `MyHeader` | `Millunium-BOLD.ttf` | headings (`.text_h1`, 56px / 35px mobile) |
 | `MyTags` | `LaBelleAurore.ttf` | the decorative markup text |
 | `MyLogo` | `DancingScript-Regular/Bold.ttf` | the "Ormaks" wordmark |
-| `LogoImg` | `tempsitc.ttf` | secondary logo treatment |
+| `LogoImg` | `tempsitc.ttf` | secondary logo treatment — dead in legacy (commented-out CSS only); not migrated |
 | — | `"Open Sans"` (web font) | body copy |
 
 **Type scale**: headings 56px/53px line-height, stepping to 35px/30px under
 480px; tag text 18px; small text 11-13px.
 
-Also: custom cursor image (`cursor.cur`) — nice detail, cheap to reproduce,
-not yet migrated.
+Also: custom cursor image (`cursor.cur`, 32×32, hotspot 7,7) — migrated in
+Stage 4a as `public/cursor.png`.
+
+## Stage 4 corrections (full per-page pass, round 1)
+
+The Stage 4 discussion read every component plus each page's SCSS and
+checked the live site. Things the earlier passes had wrong or missed:
+
+- **Three layouts, not two.** Breakpoints are ≤480 / 481–1024 / >1024. The
+  header is a side rail only above 1024; 481–1024 is a horizontal top bar
+  with all links visible (no burger); ≤480 is a top bar with a burger.
+- **Desktop never scrolls.** `body { overflow: hidden }` above 1024, every
+  page absolutely positioned at `top: 5%; height: 90%; min-height: 566px` —
+  which silently clips content on viewports shorter than ~600px.
+- **Preloader timing.** Each page (Home/About/Skills/Contact, not the 404)
+  mounted its own loader for a fixed 1500ms, so it played on *every*
+  navigation, not once on `window.load`. The loader sat under the header
+  (z-index 2 vs 3), leaving the nav visible.
+- **Fonts as rendered.** Page prose is `font-family: monospace` 12px/18px
+  (16px/19px ≤1024), i.e. Consolas/Menlo per OS. `"Open Sans"` was declared
+  for buttons but never loaded, so visitors got Arial.
+- **`tempsitc.ttf` was dead.** Only referenced from commented-out header CSS;
+  never rendered. Not migrated (removed in Stage 4a).
+- **The wordmark is live SVG `<text>`** in DancingScript with a stroke-dash
+  draw and a `neonBlink` flicker — not an image asset. `logo.svg` in the repo
+  is the Create React App React logo, unused. Its `text-shadow` glow only
+  renders in Firefox (Chrome ignores `text-shadow` on SVG).
+- **More colors.** `#fe0853` (sphere hover outline), `#55708d` (preloader
+  track), `#8d8d8d` (Home subtitle), `#949292` (header wordmark), `#222324`
+  (wordmark fill).
+- **`TextSplit tagName="link"`** bounces the whole link as one unit, not per
+  letter/word. The legacy LinkedIn link used a react-router `Link` for an
+  external URL, which is broken.
+- **Contact** has a Subject field, a red "This form is UI Demo" line, the
+  form at 70% opacity, a 4px-radius SEND button, and fly-in letters that rise
+  off the top of the screen as you type.
+- **Production state.** Deep links 404 on GitHub Pages (no SPA fallback), and
+  the Google Map fails to load — its API key is also committed in plain text
+  in the public legacy repo (`Contact.js`), so it should be deleted or
+  restricted in Google Cloud regardless of what replaces the map.
 
 ## Implication for modules/ui / design tokens
 

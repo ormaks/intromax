@@ -25,9 +25,9 @@ build/
 
 # --- Testing ---
 /coverage/
-/playwright-report/
-/test-results/
-/blob-report/
+playwright-report/
+test-results/
+blob-report/
 
 # --- Cloudflare / OpenNext ---
 .open-next/
