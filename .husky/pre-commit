@@ -1,0 +1,7 @@
+# 1. Lint + format only what's staged (see lint-staged.config.mjs).
+pnpm exec lint-staged
+
+# 2. Typecheck every project the pending changes touch — including projects
+#    that depend on a changed module (a modules/ui change also checks the
+#    portfolio). Nx caches results, so unchanged projects cost nothing.
+pnpm exec nx affected -t typecheck --uncommitted
