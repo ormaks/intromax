@@ -10,9 +10,15 @@
     "dev": "nx dev portfolio",
     "build": "nx run-many -t build",
     "lint": "nx run-many -t lint",
-    "typecheck": "nx run-many -t typecheck"
+    "typecheck": "nx run-many -t typecheck",
+    "prepare": "husky",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "nx": "23.1.1"
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "nx": "23.1.1",
+    "prettier": "^3.9.9"
   }
 }

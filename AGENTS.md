@@ -82,6 +82,7 @@ apps/portfolio/
 Routes are flat, real folders under `app/` — `app/about/page.tsx` serves `/about` directly. No route group is needed: an earlier pass wrapped every route in `app/(pages)/` to keep `app/` from mixing route folders with `components/`/`styles/`, but moving those two out to the app root removes the reason for the group entirely, and flat routing is what most Next.js docs and templates assume.
 
 Two files are pinned to `app/` itself and can't move, confirmed by testing rather than assumed:
+
 - **`layout.tsx`** — the root layout must be a direct child of `app/`.
 - **`not-found.tsx`** — wrapping it in any folder (tested: a route group, even a dedicated empty one) silently breaks the global 404 — unmatched top-level paths fall back to Next's plain default page instead of the custom one.
 
@@ -113,6 +114,17 @@ Route implementations live directly in each route's `page.tsx`, not behind a re-
 Next.js generates route types (`LayoutProps`, `PageProps`) into `.next/types`, so an app's `typecheck` script must run `next typegen` before `tsc --noEmit` or it fails on a clean checkout.
 
 Before considering any task done: lint, typecheck, and relevant e2e must pass.
+
+### Formatting and the pre-commit hook
+
+Prettier owns formatting (`.prettierrc.json` — defaults, plus `endOfLine: "auto"` so Windows checkouts with CRLF don't churn). `pnpm format` rewrites the repo, `pnpm format:check` only reports.
+
+Husky installs a pre-commit hook on `pnpm install` (the root `prepare` script). On every `git commit` it runs:
+
+1. **lint-staged** (`lint-staged.config.mjs`) on staged files only — ESLint `--fix` per project (each project has its own flat config, so files are grouped by `apps/<name>` / `modules/<name>` and linted from that directory), then Prettier. Fixes are re-staged automatically.
+2. **`nx affected -t typecheck --uncommitted`** — typechecks every project the pending changes touch, including dependents (a `modules/ui` change also checks the apps). Nx-cached.
+
+Any failure aborts the commit. Don't bypass it with `--no-verify`; fix the cause. e2e stays out of the hook (too slow) — run it before handing off, as above.
 
 ## Workflow rules
 
