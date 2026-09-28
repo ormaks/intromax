@@ -15,7 +15,7 @@ export default function NotFound() {
       </Heading>
       <CodeTag name="h1" closing />
 
-      {/* The legacy glitch/noise treatment is a Stage 4 fidelity concern. */}
+      {/* The glitch treatment for this page is still to come. */}
       <Link href="/" className="self-start">
         back home
       </Link>

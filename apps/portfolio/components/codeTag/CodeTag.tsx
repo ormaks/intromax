@@ -5,21 +5,33 @@ type CodeTagProps = {
   name: string;
   /** Renders the closing form, `</h1>`. */
   closing?: boolean;
+  /**
+   * Prefixes three non-breaking spaces. The page frame indents `<body>` and
+   * `</body>` this way, so `</html>` sits further left than the body tags —
+   * the way real nested markup reads.
+   */
+  indent?: boolean;
+  className?: string;
 };
 
 /**
- * The legacy site's "code as design" motif: literal markup rendered as
- * decoration around real content.
+ * The site's "code as design" motif: literal markup rendered as decoration
+ * around real content.
  *
  * `aria-hidden` is the whole reason this exists as a component. Without it
  * every route announces "less than h 1 greater than" before and after its
  * heading — the brackets are ornament, not content, and there are two of these
  * on every page.
  */
-export function CodeTag({ name, closing = false }: CodeTagProps) {
+export function CodeTag({
+  name,
+  closing = false,
+  indent = false,
+  className,
+}: CodeTagProps) {
   return (
-    <Text variant="tag" aria-hidden="true">
-      {`<${closing ? "/" : ""}${name}>`}
+    <Text variant="tag" aria-hidden="true" className={className}>
+      {`${indent ? "   " : ""}<${closing ? "/" : ""}${name}>`}
     </Text>
   );
 }

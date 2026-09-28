@@ -8,7 +8,7 @@ Conventions for any AI agent (Claude Code, etc.) working in this repo.
 - Apps: Next.js 16 (App Router, Turbopack), TypeScript, Tailwind v4
 - Node: 24, pinned in `.nvmrc`
 - Package manager: pnpm (version pinned via `packageManager` in the root `package.json`)
-- Testing: Playwright (e2e), TypeScript strict mode + ESLint as the fast checks
+- Testing: Playwright (e2e smoke tests, portfolio), TypeScript strict mode + ESLint as the fast checks
 - Deploy: Cloudflare (via `@opennextjs/cloudflare`), CI through GitHub Actions
 
 ## Repo layout
@@ -48,6 +48,18 @@ button/
 
 Folder names are `camelCase` (`textArea/`, `textSplit/`), files are `PascalCase` and match the component they export. A folder holds extra files when the component genuinely has parts (`header/BurgerMenu.tsx`); styling helpers shared by two components go in `src/utils/` rather than in one of their folders. Barrel exports go through the folder's `index.ts`, and `modules/ui/src/index.ts` re-exports the public surface.
 
+### Breakpoints
+
+Only the legacy site's three layouts exist — Tailwind's default `sm`/`md`/`lg`/… are cleared in `theme.css` so nobody adds a fourth by accident:
+
+- unprefixed — mobile, ≤480px
+- `tablet:` — 481px and up (legacy 481–1024)
+- `desktop:` — 1025px and up; the header becomes the side rail, and pages stop scrolling (see below)
+
+### Page frame
+
+Every route except the 404 wraps its content in `PageShell` (`components/pageShell/`). It owns three things a page shouldn't re-implement: the per-page `Preloader` (mounted per page so it replays on every navigation, as the legacy site did — and so the 404 has none), the decorative `<body>` … `</body></html>` code-tag frame, and the desktop geometry (`top: 5%`, `height: 90%`, `min-height: 566px`). Desktop pages don't scroll — `globals.css` locks `overflow` above 1024px wide, but only on viewports at least 596px tall; shorter ones scroll rather than clip. Anything that must wait for the loader to lift (e.g. an entrance animation) reads `usePreloaderDone()`.
+
 ### App root layout
 
 `app/` holds routes and only the two special files Next requires directly inside it — everything else lives beside it as a top-level sibling, standard Next.js convention:
@@ -61,7 +73,8 @@ apps/portfolio/
     about/page.tsx
     contact/page.tsx
   actions/             Server Actions ('use server'), one file per feature (contact.ts, ...)
-  components/          app-local components (Header, TextSplit, ...)
+  components/          app-local components (Header, PageShell, TextSplit, ...)
+  e2e/                 Playwright smoke tests
   styles/              globals.css, fonts.ts
   public/              favicon.ico, static assets
 ```
@@ -94,7 +107,7 @@ Route implementations live directly in each route's `page.tsx`, not behind a re-
 - `pnpm nx lint <app>` — lint
 - `pnpm nx typecheck <app>` — typecheck
 - `pnpm nx test <app>` — unit tests (if/when added)
-- `pnpm nx e2e <app>` — Playwright e2e
+- `pnpm nx e2e <app>` — Playwright e2e (portfolio: smoke tests in `apps/portfolio/e2e/`, run against a production build on port 3100, using the locally installed Chrome — set `PLAYWRIGHT_CHANNEL=""` to use Playwright's bundled Chromium instead)
 - `pnpm nx run-many -t lint typecheck` — every project at once
 
 Next.js generates route types (`LayoutProps`, `PageProps`) into `.next/types`, so an app's `typecheck` script must run `next typegen` before `tsc --noEmit` or it fails on a clean checkout.
@@ -139,4 +152,5 @@ Never self-merge, and never merge on my behalf.
 
 - Prefer editing/extending `modules/ui` components over duplicating UI logic in an app.
 - TypeScript: no `any` without a comment explaining why.
+- **Code reads as a new project.** Comments, identifiers and tests never reference the legacy site (its files, class names, or "legacy did X"). State the value and the reason on their own terms — "56px headings, 35px on mobile", not "matches legacy `.text_h1`". Legacy comparisons live only in `docs/` (the audit, specs, progress log).
 - Keep components small and colocated with their route unless shared across 2+ apps — then it moves to `modules/ui`.

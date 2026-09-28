@@ -1,15 +1,11 @@
-import { ButtonLink, Container, Heading, Text } from "@intromax/ui";
+import { ButtonLink, Heading, Text } from "@intromax/ui";
 import { CodeTag } from "@/components/codeTag";
+import { PageShell } from "@/components/pageShell";
 import { TextSplit } from "@/components/textSplit";
 
-/*
- * min-h-[80vh]: vertical centering with room for the header on mobile, not a
- * legacy or scale value — Tailwind's only named height near this is
- * min-h-screen (100vh), which pins the CTA off-screen on short viewports.
- */
 export default function HomePage() {
   return (
-    <Container className="flex min-h-[80vh] flex-col justify-center gap-6">
+    <PageShell className="flex flex-col gap-6">
       <CodeTag name="h1" />
 
       <Heading>
@@ -29,6 +25,6 @@ export default function HomePage() {
       <ButtonLink href="/contact" className="self-start">
         Contact me
       </ButtonLink>
-    </Container>
+    </PageShell>
   );
 }

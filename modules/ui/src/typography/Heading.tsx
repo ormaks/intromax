@@ -7,12 +7,9 @@ export type HeadingProps = HTMLAttributes<HTMLHeadingElement> & {
 };
 
 /**
- * The legacy `.text_h1` treatment: the display face at 56px, dropping to 35px
- * under 480px, with the tight line-height the original used at both sizes.
- *
- * The step happens at `xs` (480px, declared in theme.css) rather than
- * Tailwind's default `sm` (640px) — `sm` would leave 480-639px rendering at
- * the small size where the legacy site renders the large one.
+ * Page heading: the display face at 56px, dropping to 35px on mobile
+ * (<=480px), with a tight line-height at both sizes. `tablet:` is the 481px
+ * breakpoint declared in theme.css.
  */
 export function Heading({ as = "h1", className, ...props }: HeadingProps) {
   const Tag = as;
@@ -21,7 +18,7 @@ export function Heading({ as = "h1", className, ...props }: HeadingProps) {
     <Tag
       className={cn(
         "m-0 font-heading font-normal",
-        "text-heading-sm xs:text-heading",
+        "text-heading-sm tablet:text-heading",
         className,
       )}
       {...props}

@@ -2,15 +2,15 @@ import { useId, type InputHTMLAttributes } from "react";
 import { cn } from "../utils/cn";
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
-  /** Renders the legacy red underline plus an inline message below the field. */
+  /** Renders a red underline plus an inline message below the field. */
   error?: string;
   /** Label text rendered above the field. Omit to render just the input. */
   label?: string;
 };
 
 /**
- * Legacy contact-form field (`contact.scss`): filled grey box, accent
- * underline, inner glow on hover and focus.
+ * Form field: filled grey box, accent underline, inner glow on hover and
+ * focus.
  */
 export function Input({ className, error, id, label, ...props }: InputProps) {
   const generatedId = useId();

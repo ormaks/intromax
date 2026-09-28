@@ -6,8 +6,8 @@ export type ButtonLinkProps = NextLinkProps &
   Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof NextLinkProps>;
 
 /**
- * A link that looks like a Button — the legacy "contact me" call to action was
- * exactly this (an `<a>` styled as `.contact_btn`, not a real button).
+ * A link that looks like a Button — for calls to action that navigate, like
+ * "Contact me", which are links rather than real buttons.
  *
  * Use this rather than restyling a Link at the call site; that duplicates the
  * class list and drifts the moment the button treatment changes.

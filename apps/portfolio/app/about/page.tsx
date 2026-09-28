@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Card, Container, Heading, Text } from "@intromax/ui";
+import { Card, Heading, Text } from "@intromax/ui";
 import { CodeTag } from "@/components/codeTag";
+import { PageShell } from "@/components/pageShell";
 import { TextSplit } from "@/components/textSplit";
 
 export const metadata: Metadata = {
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <Container className="flex flex-col gap-6">
+    <PageShell className="flex flex-col gap-6">
       <CodeTag name="h1" />
       <Heading>
         <TextSplit>About me</TextSplit>
@@ -17,18 +18,13 @@ export default function AboutPage() {
       <CodeTag name="h1" closing />
 
       <Card className="max-w-prose">
-        {/*
-         * Word-split, matching the legacy About page's own prose treatment
-         * (`splitBy="words"` throughout `About.js`) — headings split by
-         * letter, body copy splits by word.
-         */}
+        {/* Headings split by letter; body copy splits by word. */}
         <Text>
           <TextSplit byWord>
-            Placeholder bio. The legacy copy predates most of the work worth
-            mentioning, so it is being rewritten rather than ported — Stage 4.
+            Placeholder bio — the real copy lands with the About page.
           </TextSplit>
         </Text>
       </Card>
-    </Container>
+    </PageShell>
   );
 }

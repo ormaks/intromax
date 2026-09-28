@@ -14,11 +14,7 @@ const NAV_ITEMS = [
   { href: "/contact", label: "contact" },
 ] as const;
 
-/*
- * Social URLs carried over from the legacy Header. The legacy version routed
- * these through react-router's <Link>, which was a bug — they are external, so
- * they get plain anchors here.
- */
+/* External profiles — plain anchors, not client-side Links. */
 const SOCIAL_ITEMS = [
   { href: "https://www.facebook.com/chytailo", label: "Facebook", short: "fb" },
   {
@@ -35,12 +31,12 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 /**
- * The legacy site's fixed 55px left rail (`header.scss`): wordmark at the top,
- * nav in the middle, socials at the bottom. Under `sm` it becomes a top bar
- * with the nav behind the burger toggle.
+ * The site navigation: a fixed 55px left rail on desktop — wordmark at the
+ * top, nav in the middle, socials at the bottom. Below `desktop` (1025px) it
+ * becomes a top bar with the nav behind the burger toggle.
  *
- * Labels are text rather than the legacy FontAwesome icons — the icon set is a
- * Stage 4 fidelity concern and not worth a vendor bundle here.
+ * Nav items are text labels for now; the icon set arrives with the header
+ * redesign.
  */
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,13 +49,13 @@ export function Header() {
         // `relative` is load-bearing: the mobile panel below is positioned
         // `top-full`, and without a positioned ancestor it resolves against
         // the viewport and drops a full screen height out of view.
-        "sm:fixed sm:inset-y-0 sm:left-0 sm:h-full sm:w-header sm:flex-col sm:py-2",
+        "desktop:fixed desktop:inset-y-0 desktop:left-0 desktop:h-full desktop:w-header desktop:flex-col desktop:py-2",
       )}
     >
       <Link
         href="/"
         aria-label="Ormaks — home"
-        className="px-4 font-logo text-2xl text-foreground sm:px-0 sm:py-2"
+        className="px-4 font-logo text-2xl text-foreground desktop:px-0 desktop:py-2"
       >
         O
       </Link>
@@ -67,19 +63,19 @@ export function Header() {
       {/*
        * One panel holding both nav and socials, so the burger reveals
        * everything the desktop rail shows. Splitting them left the socials
-       * unreachable under `sm`.
+       * unreachable below `desktop`.
        */}
       <div
         id={NAV_ID}
         className={cn(
           "absolute inset-x-0 top-full flex-col gap-6 bg-surface p-4",
-          "sm:static sm:flex sm:h-full sm:flex-1 sm:justify-between sm:bg-transparent sm:p-0",
+          "desktop:static desktop:flex desktop:h-full desktop:flex-1 desktop:justify-between desktop:bg-transparent desktop:p-0",
           isOpen ? "flex" : "hidden",
         )}
       >
         <nav
           aria-label="Primary"
-          className="flex flex-col gap-4 sm:my-auto sm:gap-6"
+          className="flex flex-col gap-4 desktop:my-auto desktop:gap-6"
         >
           {NAV_ITEMS.map((item) => {
             const active = isActive(pathname, item.href);
@@ -101,7 +97,7 @@ export function Header() {
           })}
         </nav>
 
-        <ul className="flex list-none flex-col gap-4 p-0 sm:pb-2">
+        <ul className="flex list-none flex-col gap-4 p-0 desktop:pb-2">
           {SOCIAL_ITEMS.map((item) => (
             <li key={item.href}>
               <a
