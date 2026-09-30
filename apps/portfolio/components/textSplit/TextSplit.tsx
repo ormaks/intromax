@@ -25,7 +25,9 @@ type TextSplitProps = {
  */
 function AnimatedUnit({ text }: { text: string }) {
   const [isAnimating, setIsAnimating] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   const handleHoverIn = () => {
     setIsAnimating(true);
@@ -67,7 +69,11 @@ function AnimatedUnit({ text }: { text: string }) {
  * No link mode yet: bouncing links inline within a paragraph (the Skills
  * page copy) is planned but not built.
  */
-export function TextSplit({ children, className, byWord = false }: TextSplitProps) {
+export function TextSplit({
+  children,
+  className,
+  byWord = false,
+}: TextSplitProps) {
   const units = byWord ? children.split(" ") : Array.from(children);
 
   return (
@@ -75,7 +81,11 @@ export function TextSplit({ children, className, byWord = false }: TextSplitProp
       {units.map((unit, index) => (
         // Units repeat, so the index is the only stable key available.
         <Fragment key={index}>
-          {!byWord && unit === " " ? <span> </span> : <AnimatedUnit text={unit} />}
+          {!byWord && unit === " " ? (
+            <span> </span>
+          ) : (
+            <AnimatedUnit text={unit} />
+          )}
           {byWord && index < units.length - 1 ? " " : null}
         </Fragment>
       ))}

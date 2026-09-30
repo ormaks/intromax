@@ -1,7 +1,13 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
-import { Button, Input, TextArea, toastError, toastSuccess } from "@intromax/ui";
+import {
+  Button,
+  Input,
+  TextArea,
+  toastError,
+  toastSuccess,
+} from "@intromax/ui";
 import { sendContactMessage, type ContactFormState } from "@/actions/contact";
 
 const INITIAL_STATE: ContactFormState = { status: "idle" };
@@ -23,7 +29,8 @@ export function ContactForm() {
     }
   }, [state]);
 
-  const fieldErrors = state.status === "validation_error" ? state.fieldErrors : {};
+  const fieldErrors =
+    state.status === "validation_error" ? state.fieldErrors : {};
 
   return (
     <form action={formAction} className="flex flex-col gap-4">

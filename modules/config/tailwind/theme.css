@@ -39,6 +39,8 @@
   --color-field: #37393b;
   /* Field errors: a red underline plus inline message. */
   --color-danger: #ff4d4d;
+  /* The small "Ormaks" wordmark under the header wolf. */
+  --color-wordmark: #949292;
 
   /*
    * Font roles map to the raw per-file variables an app's next/font setup
@@ -49,6 +51,8 @@
    * sets its variable on the <html> element, and @theme emits :root — same
    * specificity, so reusing a name would make which one wins a coin flip.
    */
+  /* The platform's plain sans-serif (Arial on most systems): the tiny nav labels. */
+  --font-sans-serif: sans-serif, ui-sans-serif, system-ui;
   --font-sans: var(--font-open-sans), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-millunium), ui-sans-serif, sans-serif;
   --font-tag: var(--font-la-belle-aurore), cursive;
@@ -69,6 +73,17 @@
   --text-button: 0.8125rem; /* 13px */
 
   /*
+   * Header: nav labels, nav and social icons (icons are 1em tall, so
+   * font-size is what sizes them), and the large mobile wordmark.
+   */
+  --text-label: 0.5rem; /* 8px */
+  --text-icon: 1.375rem; /* 22px */
+  --text-icon-sm: 0.9375rem; /* 15px */
+  --text-logo: 1.9375rem; /* 31px */
+  --text-logo--line-height: 1;
+  --text-logo--letter-spacing: 2.5px;
+
+  /*
    * Named sizes for exact pixel values that recur across components.
    * Each of these existed as a repeated `rounded-[3px]` / `w-[55px]` / etc.
    * arbitrary value before — giving it a theme key means Tailwind generates
@@ -77,6 +92,7 @@
    */
   --radius-control: 3px; /* the site's one border-radius, on every button/card/field */
   --width-header: 3.4375rem; /* 55px, the header rail width */
+  --height-header: 3.75rem; /* 60px, the header bar height below desktop */
   --height-field: 3.125rem; /* 50px, form input height */
 
   /*

@@ -3,6 +3,7 @@
 ## What
 
 The About page, rebuilt to match the legacy site:
+
 - **Left:** the accent "About me" heading and the bio, animated word by word.
 - **Right:** live Instagram and SoundCloud embeds. They load in the background behind a new reusable `Skeleton` placeholder from `modules/ui`.
 - **Content:** a rewritten bio.
@@ -14,12 +15,14 @@ The legacy bio describes where you were around 2018. The embeds are part of the 
 ## Scope
 
 **In scope:**
+
 - `Skeleton` component in `modules/ui`: generic and any size, exported from the barrel.
 - `EmbedFrame`, a client component in the portfolio app: skeleton → iframe crossfade.
 - About layout at all three breakpoints.
 - New bio copy and embed URLs.
 
 **Out of scope:**
+
 - Cookie consent and a privacy banner. Accepted for now: the iframes set third-party cookies on every visit.
 - Click-to-load placeholders (ruled out).
 - Any other page using `Skeleton`, though it's built to be reusable.
@@ -27,6 +30,7 @@ The legacy bio describes where you were around 2018. The embeds are part of the 
 ## Approach
 
 **`Skeleton`** (`modules/ui/src/skeleton/Skeleton.tsx` + `index.ts`, re-exported from `modules/ui/src/index.ts`):
+
 - A `div` with `bg-field`, `rounded-control` and Tailwind's `animate-pulse` (turned off with `motion-reduce:animate-none`).
 - Size and shape come entirely from `className`, so any width, height or rounding works, e.g. `<Skeleton className="h-[500px] w-[400px]" />`.
 - `aria-hidden`. The loading announcement belongs to whatever uses it.
@@ -34,6 +38,7 @@ The legacy bio describes where you were around 2018. The embeds are part of the 
 - This is a new public component in `modules/ui`. It's shared because you asked for it in the UI library for reuse. No new dependency.
 
 **`EmbedFrame`** (`apps/portfolio/components/embedFrame/`, `"use client"`):
+
 - Props: `src`, `title` (required, the iframe's accessible name), and `className` for size.
 - Renders a relatively positioned wrapper with `<Skeleton className="absolute inset-0" />`. **The iframe is mounted on the client after hydration**, not in the server render.
   - Reason: an iframe in the server HTML can finish loading before React attaches `onLoad`. The skeleton would then never clear, a known React quirk.
@@ -44,6 +49,7 @@ The legacy bio describes where you were around 2018. The embeds are part of the 
 - `loading="eager"`: it's on the first screen of a non-scrolling page, so lazy loading would do nothing.
 
 **Layout** (from legacy `about.scss`):
+
 - **Desktop:**
   - Two columns inside `PageShell`, content indented 6% at 90% width.
   - Left column 50%: `<h1>` code tags, heading "About me" in **accent**, then paragraphs as `TextSplit byWord` in monospace prose (12px/18px), `margin: 12px 0`.
@@ -58,6 +64,7 @@ The legacy bio describes where you were around 2018. The embeds are part of the 
   - SoundCloud: full width on mobile, 80% with `margin-top: 30px` on tablet.
 
 **Embed URLs:**
+
 - **Instagram:** `https://www.instagram.com/p/<id>/embed`.
 - **SoundCloud:** the `w.soundcloud.com/player/?url=…` widget with the legacy parameters: `color=%23181818`, `auto_play=false`, `hide_related=false`, `show_comments=true`, `show_user=true`, `show_reposts=false`, `show_teaser=true`.
 - The URLs are hardcoded in `app/about/page.tsx`. They're public embed links, so no env vars are needed.

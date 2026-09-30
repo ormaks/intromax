@@ -3,6 +3,7 @@
 ## What
 
 The Home page, rebuilt to match the legacy site:
+
 - **Left:** the three-line heading, the monospace subtitle and the CONTACT ME button.
 - **Right:** the wolf and the "Ormaks" wordmark. The wordmark draws itself in with GSAP DrawSVG, then flickers on a neon loop. A very faint mirrored copy sits beneath it, like a reflection.
 - **Content:** new copy.
@@ -14,6 +15,7 @@ Home is the first impression and holds most of the site's signature visuals. Eve
 ## Scope
 
 **In scope:**
+
 - `gsap` dependency in the portfolio app only. `@gsap/react` too, for `useGSAP`, which cleans up animations on navigation.
 - `Wordmark` component: "Ormaks" converted to outlined shapes from DancingScript Regular, with the draw-in, blink and mirror copy.
 - Wolf draw-in on Home.
@@ -23,6 +25,7 @@ Home is the first impression and holds most of the site's signature visuals. Eve
 - New Home copy.
 
 **Out of scope:**
+
 - The header wolf, which only spins (004b).
 - Any other page using GSAP. The sphere decision is round 2.
 - Changing the CONTACT ME destination (`/contact`).
@@ -32,6 +35,7 @@ Home is the first impression and holds most of the site's signature visuals. Eve
 **Dependencies**: add `gsap` and `@gsap/react` to `apps/portfolio`, a new dependency flagged per AGENTS.md. DrawSVG ships in the public `gsap` package since GSAP became free (2025). Import it from `gsap/DrawSVGPlugin` and register it once in the client component.
 
 **Wordmark shapes**: a throwaway script in the session's scratch folder (using `opentype.js`, installed there, not in the repo) converts "Ormaks" set in DancingScript Regular into path data.
+
 - Legacy used the regular weight (`font-weight` unset).
 - DancingScript is under the Open Font License (OFL), so outlining is allowed.
 - Result: `apps/portfolio/components/wordmark/Wordmark.tsx`, one `<path>` per glyph, with `fill` and `stroke` set through props and classes.
@@ -39,6 +43,7 @@ Home is the first impression and holds most of the site's signature visuals. Eve
 - DancingScript stays loaded, because the header still uses it as a live font.
 
 **Right side, desktop (from legacy `home.scss`):**
+
 - **Container:** anchored at the right edge (legacy `right: -123px`, so it deliberately runs past the viewport edge).
 - **Wolf:** original size (208×286), accent colour, placed as legacy (`right: 145px; top: 30px` within the container).
 - **Wordmark:**
@@ -51,6 +56,7 @@ Home is the first impression and holds most of the site's signature visuals. Eve
   - Runs the same draw and blink animation as the main wordmark.
 
 **Animation** (client component, using `useGSAP` scoped to the Home right side):
+
 - **Waits** until `preloaderStore` reports done (004a) before the timeline starts.
   - First load: after the loader clears.
   - Client-side navigation back to Home: the loader shows again for 1.5s, then the timeline starts.
@@ -66,6 +72,7 @@ Home is the first impression and holds most of the site's signature visuals. Eve
   - Hiding before the first paint is safe because the preloader covers the page at that moment.
 
 **Left side (from legacy `home.scss`):**
+
 - Positioned via `PageShell` (004a).
 - Content block indented 6% on desktop, 9% on tablet, 13% on mobile.
 - `<h1>` code tags above and below (`CodeTag`).
@@ -77,12 +84,14 @@ Home is the first impression and holds most of the site's signature visuals. Eve
   - On mobile: 10px text, padding 7px 10px.
 
 **Tablet (481–1024):**
+
 - Right side moves to the bottom, centred in a column.
 - Wolf in normal flow.
 - Wordmark **not rotated**, 232px tall, `margin-top: -100px`. No mirror copy.
 - Page `min-height: 768px`.
 
 **Mobile (≤480):**
+
 - Wolf becomes a centred watermark at 80% width and **2% opacity**. It doesn't animate; drawing something nearly invisible is wasted work.
 - Wordmark and mirror copy are hidden.
 - Don't mount the wordmark on mobile at all, so no GSAP work runs for hidden elements. Use `gsap.matchMedia()` for this, not just `display: none`.
@@ -111,4 +120,4 @@ Home is the first impression and holds most of the site's signature visuals. Eve
 2. **Subtitle.** Legacy: "Front End Developer / React / Angular". What should it say now? It's a short, slash-separated line, e.g. "Frontend Developer / React / TypeScript / Next.js".
 3. **Button label.** Keep "Contact me"?
 4. **Metadata.** Page title (currently the layout's "Ormaks — Maks Chytailo") and a one-sentence description for search results and link previews.
-5. **Wolf draw timing.** Is ~2.5s alongside the wordmark fine, or should the wolf draw *first*, with the wordmark following?
+5. **Wolf draw timing.** Is ~2.5s alongside the wordmark fine, or should the wolf draw _first_, with the wordmark following?

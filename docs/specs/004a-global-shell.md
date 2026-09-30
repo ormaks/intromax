@@ -11,6 +11,7 @@ Home (004c) and About (004d) both depend on this frame, and the header (004b) de
 ## Scope
 
 **In scope:**
+
 - Playwright (`@playwright/test`, app-local devDependency) + `e2e` script/Nx target + smoke tests
 - Breakpoint tokens matching the legacy three layouts; migrate existing `sm:`/`xs:` usages
 - `PageShell` component: non-scroll desktop layout with a short-viewport scroll fallback, code-tag frame, per-page preloader
@@ -22,10 +23,11 @@ Home (004c) and About (004d) both depend on this frame, and the header (004b) de
 - Docs: `legacy-audit.md` corrections, `AGENTS.md` (breakpoints, e2e command, `PageShell` convention)
 
 **Out of scope:**
+
 - Header visuals/behavior — 004b (this spec only swaps its breakpoint prefixes so nothing breaks)
 - Any page's real content or page-specific layout — 004c/004d
 - Visual snapshot tests (`toHaveScreenshot`) — end of Stage 4
-- Skills/Contact/NotFound fidelity — round 2 (they get wrapped in `PageShell` only so the frame is consistent; NotFound is *not* wrapped)
+- Skills/Contact/NotFound fidelity — round 2 (they get wrapped in `PageShell` only so the frame is consistent; NotFound is _not_ wrapped)
 - Font licensing for Millunium — Stage 6
 
 ## Approach
@@ -33,6 +35,7 @@ Home (004c) and About (004d) both depend on this frame, and the header (004b) de
 **1. Playwright.** Add `@playwright/test` to `apps/portfolio` devDependencies (new dependency — the e2e tool AGENTS.md already names). `playwright.config.ts` at the app root, Chromium only, `webServer` running `next build && next start` on a fixed port (production build — dev-mode overlays and HMR make smoke tests flaky). Tests in `apps/portfolio/e2e/`. Script `"e2e": "playwright test"`; add an `e2e` entry to `nx.json` `targetDefaults` with `cache: false` and `dependsOn: []`. Browser binaries are installed with `pnpm exec playwright install chromium` — a one-off download (~150MB) outside the repo, flagged for approval before running. Add `test-results/`, `playwright-report/` to `.gitignore`.
 
 Smoke tests (grow with each later spec):
+
 - `/`, `/about`, `/skills`, `/contact` return 200, render their `<h1>`, and the preloader is gone within 3s
 - an unknown path renders the custom 404 (not Next's default) and shows **no** preloader
 - clicking a nav link navigates client-side and the preloader shows again, then clears
@@ -40,12 +43,14 @@ Smoke tests (grow with each later spec):
 - at 1440×900 the document does not scroll; at 1440×500 it does
 
 **2. Breakpoints.** In `theme.css`, reset Tailwind's defaults (`--breakpoint-*: initial`) and declare only the legacy ones, so nobody reaches for a `md:` that means nothing here:
+
 - `--breakpoint-tablet: 30.0625rem` (481px — legacy tablet starts at 481)
 - `--breakpoint-desktop: 64.0625rem` (1025px — legacy desktop is >1024)
 
 Mobile-first as usual: unprefixed = ≤480. Replace existing `xs:` (heading step, currently 480px — off by one vs legacy) with `tablet:`, and the Header/layout `sm:` (640px) with `desktop:`. At this stage the Header just keeps its current look, switching at 1025 instead of 640; 004b rebuilds it.
 
 **3. `PageShell`** (`apps/portfolio/components/pageShell/`) — wraps each route's content (Home, About, Skills, Contact; **not** NotFound):
+
 - renders `<Preloader />` (see 4) — this is how the preloader runs "on every navigation": pages remount when the route changes, as in the legacy site where each page component mounted its own loader. **Deviation from the discussion's `app/template.tsx` idea**, deliberately: a root template would also wrap the global 404, which must have no preloader, and moving the 404 into a route group is already proven to break it (Stage 2). Per-page is also exactly what the legacy did.
 - the code-tag frame: `<body>` top-left, `</body>` + `</html>` bottom-left, via `CodeTag` (LaBelleAurore 18px, `text-muted`, indented 5px mobile / 10px tablet / 30px desktop — legacy `main.scss`)
 - desktop layout: page area positioned `top: 5%`, `height: 90%` of the viewport right of the rail, `min-height: 566px`, frame tags pinned top/bottom with content between (flex column, `justify-between`) — the legacy geometry, built with flex instead of `position: absolute` stacking
@@ -54,6 +59,7 @@ Mobile-first as usual: unprefixed = ≤480. Replace existing `xs:` (heading step
 **Non-scroll rule** in `globals.css`: `@media (min-width: 1025px) and (min-height: 596px) { html, body { overflow: hidden; } }`. Shorter viewports scroll instead of clipping — the escape hatch agreed in discussion. 596px is where the legacy `top: 5%` + `min-height: 566px` page still fits (see Deviations).
 
 **4. Preloader rework** (`components/preloader/`):
+
 - Visible from the server render (with the `<noscript>` escape), hidden once **both** 1.5s have elapsed since mount **and** `document.readyState === "complete"` — on client navigations the document is already complete, so that reduces to a flat 1.5s; on first load it is `max(load, 1.5s)`, capped at 5s so a hung subresource can't trap the site behind the loader.
 - Overlays the page (`fixed`, above content, below toasts) — the page underneath stays mounted, so About's iframes load behind it.
 - "Done" signal: React context provided by `Preloader` (which wraps the page), read with `usePreloaderDone()`. Consumers (004c's draw-in) wait on it. App-local — nothing outside the portfolio needs it. (Originally planned as a module store — see Deviations.)
@@ -62,6 +68,7 @@ Mobile-first as usual: unprefixed = ≤480. Replace existing `xs:` (heading step
 - The loader itself is `role="status"` with an accessible name. (`aria-busy` on the page region was dropped — see Deviations.)
 
 **5. Global styles** (`globals.css` + `theme.css`):
+
 - Cursor: convert legacy `cursor.cur` (32×32, hotspot 7,7) to `public/cursor.png` with a one-off script in the session scratchpad (`sharp`, already present via Next) — only the PNG enters the repo. `*, *::before, *::after { cursor: url(/cursor.png) 7 7, pointer !important; }` — applies to inputs too (decided). Wrapped so `@media (forced-colors: active)` falls back to system cursors.
 - `body { user-select: none; }` (decided — kept from legacy). Form fields remain editable/selectable (browser default inside inputs).
 - `:focus-visible { outline: 1px solid var(--color-accent); outline-offset: 2px; }` — keyboard only; mouse users see what legacy showed.
@@ -90,7 +97,7 @@ Mobile-first as usual: unprefixed = ≤480. Replace existing `xs:` (heading step
 
 ## Deviations during implementation
 
-- **"Done" signal is React context, not a module store.** `Preloader` wraps the page (`<Preloader>{children}</Preloader>`) and provides `usePreloaderDone()`. A module-level store has an ordering bug: a page rendered after navigation reads the *previous* page's "done = true" during its first render, before the new Preloader's effect can reset it — Home would start its draw-in behind the loader. Context is correct from the first render.
+- **"Done" signal is React context, not a module store.** `Preloader` wraps the page (`<Preloader>{children}</Preloader>`) and provides `usePreloaderDone()`. A module-level store has an ordering bug: a page rendered after navigation reads the _previous_ page's "done = true" during its first render, before the new Preloader's effect can reset it — Home would start its draw-in behind the loader. Context is correct from the first render.
 - **Non-scroll threshold is 596px tall, not 566px.** The page area is `top: 5%` + at least 566px, which only fits a viewport ≥ ~596px (566 + 5%·596). Locking scroll from 566 up would clip 0–30px on 566–595px viewports.
 - **Mobile/tablet top padding for the fixed header bar is deferred to 004b.** The current (Stage 2) header is still in-flow below desktop, so adding the 60px offset now would double the gap. 004b makes the bar fixed and adds the offset in the same change.
 - **Playwright runs on the installed Chrome** (`channel: "chrome"`). The Chromium download from `cdn.playwright.dev` timed out repeatedly on this machine. `PLAYWRIGHT_CHANNEL=""` switches back to the bundled browser for CI.
@@ -101,4 +108,4 @@ Mobile-first as usual: unprefixed = ≤480. Replace existing `xs:` (heading step
 ## Open questions
 
 - Approve downloading Playwright's Chromium (~150MB, machine-local) when implementation reaches that step.
-- If Next's root layout turns out *not* to remount per-page components on navigation in some edge (e.g. same-page link), that matches legacy (react-router didn't remount either) — flag only if something else surprises.
+- If Next's root layout turns out _not_ to remount per-page components on navigation in some edge (e.g. same-page link), that matches legacy (react-router didn't remount either) — flag only if something else surprises.

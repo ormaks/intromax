@@ -16,7 +16,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={cn(fontVariables, "h-full antialiased")}>
-      <body className="flex min-h-full flex-col font-mono">
+      {/*
+       * Browser extensions (Grammarly, password managers) add attributes to
+       * <body> before React hydrates, which React reports as a mismatch.
+       * suppressHydrationWarning covers this element's own attributes only —
+       * mismatches anywhere inside the page are still reported.
+       */}
+      <body
+        suppressHydrationWarning
+        className="flex min-h-full flex-col font-mono"
+      >
         {/* The preloader lives in each page's PageShell, not here, so it
             replays on every navigation and stays off the 404. */}
         <ToastHost />
@@ -30,8 +39,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </a>
 
         <Header />
-        {/* The header is a fixed `w-header` rail on desktop; this clears it. */}
-        <main id="main" className="flex-1 desktop:pl-(--width-header)">
+        <main
+          id="main"
+          className="flex-1 pt-(--height-header) desktop:pt-0 desktop:pl-(--width-header)"
+        >
           {children}
         </main>
       </body>

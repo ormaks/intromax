@@ -1,6 +1,10 @@
 import { addToast, type ToastVariant } from "./toastStore";
 
-function toast(variant: ToastVariant, message: string, duration?: number): number {
+function toast(
+  variant: ToastVariant,
+  message: string,
+  duration?: number,
+): number {
   return addToast(variant, message, duration);
 }
 
