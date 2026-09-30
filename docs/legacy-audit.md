@@ -48,28 +48,28 @@ the palette and the font roles.
 
 **Colors**
 
-| Value | Role | Notes |
-|---|---|---|
-| `#252627` | page background | |
-| `#fff` | body text | |
-| `#08fdd8` | **accent** | The dominant color — 23 uses. Buttons, borders, input underlines, wordmark glow, 404 glitch. Missed entirely by the first pass. |
-| `#515152` | muted / decorative "code tags" text | |
-| `#181818` | raised surface | header rail background |
-| `#4d4d4e` | borders, hairlines | |
-| `#37393b` | form field fill | |
+| Value     | Role                                | Notes                                                                                                                           |
+| --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `#252627` | page background                     |                                                                                                                                 |
+| `#fff`    | body text                           |                                                                                                                                 |
+| `#08fdd8` | **accent**                          | The dominant color — 23 uses. Buttons, borders, input underlines, wordmark glow, 404 glitch. Missed entirely by the first pass. |
+| `#515152` | muted / decorative "code tags" text |                                                                                                                                 |
+| `#181818` | raised surface                      | header rail background                                                                                                          |
+| `#4d4d4e` | borders, hairlines                  |                                                                                                                                 |
+| `#37393b` | form field fill                     |                                                                                                                                 |
 
 Secondary one-off greys (`#8d8d8d`, `#949292`, `#222324`, `#284641`) are page
 decoration rather than tokens, and are left to the Stage 4 fidelity pass.
 
 **Font roles** — five, not two (`main.scss:81-107`):
 
-| Legacy name | File | Role |
-|---|---|---|
-| `MyHeader` | `Millunium-BOLD.ttf` | headings (`.text_h1`, 56px / 35px mobile) |
-| `MyTags` | `LaBelleAurore.ttf` | the decorative markup text |
-| `MyLogo` | `DancingScript-Regular/Bold.ttf` | the "Ormaks" wordmark |
-| `LogoImg` | `tempsitc.ttf` | secondary logo treatment — dead in legacy (commented-out CSS only); not migrated |
-| — | `"Open Sans"` (web font) | body copy |
+| Legacy name | File                             | Role                                                                             |
+| ----------- | -------------------------------- | -------------------------------------------------------------------------------- |
+| `MyHeader`  | `Millunium-BOLD.ttf`             | headings (`.text_h1`, 56px / 35px mobile)                                        |
+| `MyTags`    | `LaBelleAurore.ttf`              | the decorative markup text                                                       |
+| `MyLogo`    | `DancingScript-Regular/Bold.ttf` | the "Ormaks" wordmark                                                            |
+| `LogoImg`   | `tempsitc.ttf`                   | secondary logo treatment — dead in legacy (commented-out CSS only); not migrated |
+| —           | `"Open Sans"` (web font)         | body copy                                                                        |
 
 **Type scale**: headings 56px/53px line-height, stepping to 35px/30px under
 480px; tag text 18px; small text 11-13px.
@@ -89,7 +89,7 @@ checked the live site. Things the earlier passes had wrong or missed:
   page absolutely positioned at `top: 5%; height: 90%; min-height: 566px` —
   which silently clips content on viewports shorter than ~600px.
 - **Preloader timing.** Each page (Home/About/Skills/Contact, not the 404)
-  mounted its own loader for a fixed 1500ms, so it played on *every*
+  mounted its own loader for a fixed 1500ms, so it played on _every_
   navigation, not once on `window.load`. The loader sat under the header
   (z-index 2 vs 3), leaving the nav visible.
 - **Fonts as rendered.** Page prose is `font-family: monospace` 12px/18px

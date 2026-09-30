@@ -11,6 +11,7 @@ Foundation everything else builds on — every future app (portfolio, pet projec
 ## Scope
 
 **In scope:**
+
 - Nx workspace initialized in this repo, pnpm as the package manager
 - `apps/portfolio` — Next.js 16 (App Router, TypeScript, Tailwind), created manually via `create-next-app`, not an Nx Next.js plugin generator
 - `modules/config` — shared eslint config, base tsconfig, tailwind preset
@@ -23,6 +24,7 @@ Foundation everything else builds on — every future app (portfolio, pet projec
 - Update `AGENTS.md`'s repo layout section if the real structure ends up differing from the draft
 
 **Out of scope (explicitly):**
+
 - Any actual portfolio content, design, or components
 - Playwright/e2e setup
 - Cloudflare deploy config

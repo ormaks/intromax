@@ -11,12 +11,14 @@ The Stage 2 Header is a functional stand-in: text labels, one 640px switch, a ge
 ## Scope
 
 **In scope:**
-- Seven icon components (Font Awesome Free SVGs): house, user (regular), gear, envelope (regular), facebook-f, instagram, telegram
+
+- Seven icon components (Font Awesome Free SVGs): house (regular), user (regular), gear, envelope (regular), facebook-f, instagram, telegram
 - Three layouts at the 004a breakpoints (≤480, 481–1024, >1024)
 - Nav hover/active behavior, logo spin, burger morph and slide-ins
 - `Wolf` SVG component (centerline-traced line art), used here and by 004c
 
 **Out of scope:**
+
 - Wolf draw-in animation (004c; this spec only guarantees the SVG is built from strokes that can be drawn)
 - New nav items or links (Works/Lab, a language switcher — not now)
 - Changing the social URLs
@@ -24,13 +26,15 @@ The Stage 2 Header is a functional stand-in: text labels, one 640px switch, a ge
 ## Approach
 
 **Icons**: `apps/portfolio/components/icons/`. There's one `Icons.tsx` exporting seven small components plus `index.ts`. It's one folder because they are one set, and seven single-file folders would be noise. This is a small, deliberate deviation from one-folder-per-component, documented in the file.
-- Paths are copied from Font Awesome Free 6. The legacy site used FA5; the FA6 equivalents are `house`, `user` regular, `gear`, `envelope` regular and the three brands, which are visually the same at these sizes.
+
+- Paths are copied from Font Awesome Free 7 (see Deviations). The legacy site used FA5; the current equivalents are `house` regular, `user` regular, `gear`, `envelope` regular and the three brands, which look the same at these sizes.
 - The header comment carries the **CC BY 4.0** attribution the icon licence requires.
 - Each icon takes `className`, uses `fill="currentColor"`, and is `aria-hidden`. The accessible name stays on the link.
 - No dependency.
 
 **Wolf**: `apps/portfolio/components/wolf/Wolf.tsx`.
-- An inline SVG of the legacy `Wolf2.png` line art, redrawn as **stroked paths along the centre of each line**: `fill="none"`, `stroke="currentColor"`, round joins. That is what lets DrawSVG draw it in 004c without doubled edges.
+
+- An inline SVG of the legacy `Wolf2.png` line art, redrawn as **stroked paths along the centre of each line**: `fill="none"`, `stroke="currentColor"`, mitred joins (sharp corners, as asked) with round caps so lines meet cleanly at junctions. That is what lets DrawSVG draw it in 004c without doubled edges.
 - Accepts `className` and forwards a ref to the `<svg>` so 004c can target its paths.
 - Tracing happens outside the repo (see Open questions); only the resulting path data is committed.
 - The eyes and nose are filled shapes in the original. They stay as small filled paths, and 004c fades them in after the stroke draws.
@@ -44,7 +48,7 @@ The Stage 2 Header is a functional stand-in: text labels, one 640px switch, a ge
     - Below the Wolf, "Ormaks" in `font-logo` 18px, `#949292`, `text-shadow: 0 0 1px accent`.
   - **Nav** (middle): a 300px-tall column, links spaced evenly.
     - Each link: icon 22px in `border` colour; below it an 8px uppercase label in the accent colour at `opacity: 0`.
-    - On hover: the link widens to 65px (0.3s), and icon and label turn accent with the label at opacity 1.
+    - On hover: the link widens to 64px (0.3s; legacy 65px, see Deviations), and icon and label turn accent with the label at opacity 1.
     - Active page: icon accent, label visible. Keep Stage 2's prefix-aware `isActive`.
   - **Socials** (bottom): 15px icons in `border` colour, turning accent on hover, opening in a new tab with `rel="noopener noreferrer"`.
 - **Tablet (481–1024), top bar:**
@@ -63,30 +67,50 @@ The Stage 2 Header is a functional stand-in: text labels, one 640px switch, a ge
   - Keep the Stage 2 behaviour: `aria-expanded`/`aria-controls` on the button, closes on route change, and closes on Escape (add it if missing).
 
 **Structure:**
+
 - `BurgerMenu.tsx` stays as the burger button.
 - Header state is lifted as needed.
 - Use `cn(...)` for every conditional class, per AGENTS.md.
-- `#949292` is used once, so it's an arbitrary value with a comment.
+- `#949292` becomes the `--color-wordmark` token (see Deviations).
 
-**Layout offset**: `app/layout.tsx`'s `main` clears the rail with `desktop:pl-(--width-header)`. 004a already adds the 60px top padding below 1025px.
+**Layout offset**: `app/layout.tsx`'s `main` clears the rail with `desktop:pl-(--width-header)`. Below 1025px it clears the fixed 60px bar with `pt-(--height-header)` (deferred from 004a, see Deviations).
 
 ## Acceptance criteria
 
-- [ ] Desktop: rail matches legacy side by side. Wolf spins on the 15s cycle, nav labels hidden until hover or active, hover widens to 65px, socials at the bottom
-- [ ] Tablet (800px): horizontal 60px bar with visible nav and socials, no burger
-- [ ] Mobile (375px): centred accent "Ormaks", burger morphs to an accent ✕, nav row and socials slide in, text fades
-- [ ] Burger: `aria-expanded` correct, closes on route change and on Escape
-- [ ] Every nav and social link has an accessible name; icons are `aria-hidden`
+- [ ] Desktop: rail matches legacy side by side. Wolf spins on the 15s cycle, nav labels hidden until hover or active, hover widens to 64px, socials at the bottom
+- [x] Tablet (800px): horizontal 60px bar with visible nav and socials, no burger
+- [x] Mobile (375px): centred accent "Ormaks", burger morphs to an accent ✕, nav row and socials slide in, text fades
+- [x] Burger: `aria-expanded` correct, closes on route change and on Escape
+- [x] Every nav and social link has an accessible name; icons are `aria-hidden`
 - [ ] `Wolf` renders crisp at 55px and at 300px+, built from stroked paths (`fill="none"`, apart from the small eye/nose shapes)
-- [ ] Icons file carries the Font Awesome CC BY 4.0 attribution
-- [ ] e2e: add burger open/close and nav-activation smoke tests at 375px; the rail and top-bar layouts render at 1440 and 800
+- [x] Icons file carries the Font Awesome CC BY 4.0 attribution
+- [x] e2e: add burger open/close and nav-activation smoke tests at 375px; the rail and top-bar layouts render at 1440 and 800
 - [ ] Side-by-side screenshots (375/800/1440, including hover and the open burger) in the PR
-- [ ] Lint, typecheck, build and e2e pass
+- [x] Lint, typecheck, build and e2e pass
+
+## Deviations during implementation
+
+- **Wolf traced by a throwaway script, not Inkscape or autotrace** (you asked me to do it myself, with straight, sharp lines). A scratch-folder Node script, never committed, did the tracing:
+  - It separated the filled shapes from the lines, thinned the lines to their centres, followed them into a graph of junctions and segments, and simplified each run into straight segments.
+  - It then welded near-duplicate vertices, mirrored the left half so the mark is **exactly symmetric** about x = 103.5, and I corrected about ten vertices by hand: the forehead's five-point shape, almond eyes, jaw lines straight to the chin, a single point under the nose.
+  - Result: 96 polylines plus 4 filled shapes, checked by overlaying on the source PNG. Lines are ordered top to bottom in mirror pairs for 004c's staggered draw-in, and tagged `data-wolf-line` / `data-wolf-shape`.
+- **Font Awesome Free 7, not 6.** 7 is current; the licence is the same (CC BY 4.0). Its Telegram icon is only the plane in a circle (the plane-only variant is now an alias of it), which is Telegram's current official mark.
+- **Header links use `next/link` directly, not `@intromax/ui`'s `Link`.** That component carries its own `hover:text-foreground`. `cn` only concatenates class names, so the header's `hover:text-accent` lost to whichever utility Tailwind emits later: hovered icons went white. The same issue made the burger's open state keep `w-full`, and a default `h-auto` collapse the wolf to 0×0. All three are fixed locally, and an e2e test now asserts the accent hover colour. **The underlying problem is systemic**: see the note in the PR about `tailwind-merge`.
+- **New token `--height-header`** (60px) in `theme.css`, shared by the bar, the content offset in `layout.tsx` and the mobile nav's position. The 004a-deferred top offset lands here, as planned.
+- **Closed mobile panels are `invisible` as well as off-screen**, so keyboard and screen-reader users can't reach hidden links. Visibility transitions with the slide, so it only switches off once the panel has left the screen.
+- **Sizes follow the Tailwind spacing scale, not legacy pixels.** Where a legacy value sits a pixel off a scale step, the scale wins: hover tab 64px (legacy 65), nav column 288px (300), wolf 56px/44px (55/45), mobile nav row 56px (55), wordmark `top` 8px (9). The burger's internals land exactly on fractional steps (`h-7.5`, `top-3.25`, `w-12.5`, …), so it's unchanged. Still arbitrary, because they're specific: the wordmark's `left: 37%`, its tablet glow, and the `calc()` offsets for the mobile nav row and socials.
+- **Header type and colour became theme tokens** rather than one-off arbitrary values: `text-label` (8px), `text-icon` (22px), `text-icon-sm` (15px), `text-logo` (31px, 2.5px tracking) and `--color-wordmark` (`#949292`, replacing the planned arbitrary value). `--font-sans-serif` (the platform's plain sans-serif) sets the 8px nav labels.
+- **Home icon is Font Awesome's regular (outline) house**, matching the other regular nav icons, rather than the solid one.
+- **Header wolf uses a heavier stroke** (`strokeWidth={3}` instead of the default 1.6). At 45-55px tall, the default would render well under a pixel wide.
+- **Review fixes (`code-reviewer` pass):**
+  - Escape returns focus to the burger.
+  - The burger keeps a constant "Menu" label, with `aria-expanded` carrying the state.
+  - The menu closes on any route change, including back/forward, and when the window grows past mobile width.
+  - Focus rings are inset so the tablet bar doesn't clip them.
+  - Labels and the desktop tab also appear on keyboard focus.
+  - ~~Reduced motion zeroes transition delays.~~ Superseded: the site-wide reduced-motion override was removed. The site is animation-first and plays its animations whatever the OS setting.
+  - `isActive` is segment-aware.
 
 ## Open questions
 
-- **Who traces the wolf?** No centerline-tracing tool is installed on this machine. Options:
-  - (a) You trace `Wolf2.png` in Inkscape (Trace Bitmap → Centerline) and hand me the SVG. I'll clean it up and convert it into the component.
-  - (b) I install `autotrace` locally (a machine-level download outside the repo, needs your OK) and trace it myself. Quality may need hand-editing.
-  - (c) I redraw it by hand as polylines from the PNG. It's geometric line art, so this is feasible, but slowest.
-  - My recommendation is (a) if you have Inkscape, otherwise (b).
+None — the wolf was traced in-house (see Deviations).

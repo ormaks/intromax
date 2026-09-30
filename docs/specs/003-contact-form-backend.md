@@ -11,6 +11,7 @@ Closes the one piece of real functionality the legacy site never shipped. Also t
 ## Scope
 
 **In scope:**
+
 - Server Action (`'use server'`) handling form submission — no separate `/api/` route
 - Fields: name, email, message
 - Server-side validation (required fields, valid email format) — client-side validation as a UX nicety, not the source of truth
@@ -20,6 +21,7 @@ Closes the one piece of real functionality the legacy site never shipped. Also t
 - Basic server-side error handling (Resend API failure, network issues) — surfaced to the user as a generic "something went wrong, try again" rather than raw errors
 
 **Out of scope (explicitly):**
+
 - Bot/spam protection (honeypot, rate limiting) — deferred, can be added later without touching this spec's core logic
 - Domain-verified sending in Resend (fine to send from Resend's default domain for now; revisit if/when a custom domain is verified)
 - Any database/storage of submissions — this is fire-and-forget email, nothing persisted

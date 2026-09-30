@@ -26,8 +26,12 @@ test.describe("pages", () => {
       const response = await browserPage.goto(page.path);
       expect(response?.status()).toBe(200);
 
+      // The loader must be in the server HTML so nothing flashes before it.
+      // Checked there rather than with toBeVisible(): on a slow first load
+      // it lifts the moment `load` fires, which is also when goto() returns.
+      expect(await response?.text()).toContain('aria-label="Loading"');
+
       const loader = browserPage.getByRole("status", { name: "Loading" });
-      await expect(loader).toBeVisible();
       await expect(loader).toBeHidden({ timeout: PRELOADER_TIMEOUT });
 
       await expect(pageHeading(browserPage)).toHaveText(page.heading);

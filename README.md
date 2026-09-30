@@ -7,6 +7,7 @@ Personal portfolio, rebuilt as an Nx monorepo, doubling as a hands-on testbed fo
 - A rebuild of an existing portfolio (previously static, deployed on GitHub Pages) — new stack, new design, same core purpose: showcase experience and projects.
 - A "Lab" / pet-projects section: standalone demo apps for practicing specific libraries/techniques, including a rebuilt version of an earlier barbershop project.
 - An explicit experiment in agent-driven development: most implementation work here goes through Claude Code following the conventions in `AGENTS.md`, with the process itself being part of the point, not just the output.
+
 ## Stack
 
 - **Monorepo**: Nx (task orchestration/caching; apps are hand-scaffolded, not Nx-generated)
@@ -15,6 +16,7 @@ Personal portfolio, rebuilt as an Nx monorepo, doubling as a hands-on testbed fo
 - **Testing**: Playwright (e2e)
 - **Deploy**: Cloudflare, via `@opennextjs/cloudflare`
 - **Backend**: minimal by design — starts as a contact-form endpoint (email API), expands only as specific pet projects need it (e.g. a Postgres + Auth.js pet project for auth practice)
+
 ## Structure
 
 ```
@@ -46,7 +48,7 @@ Requires Node 24 (see `.nvmrc`) and pnpm — `pnpm install`, then `pnpm nx dev p
 - [ ] **Stage 5** — Pet-projects section + barbershop duplicate
 - [ ] **Stage 6** — Cloudflare CI/CD
 - [ ] **Stage 7** — Testing & ongoing agent loop
-  See `docs/PROGRESS.md` for what's actually landed vs. this plan, and `AGENTS.md` for how work in this repo is done.
+      See `docs/PROGRESS.md` for what's actually landed vs. this plan, and `AGENTS.md` for how work in this repo is done.
 
 ## Working in this repo
 
@@ -54,4 +56,3 @@ Requires Node 24 (see `.nvmrc`) and pnpm — `pnpm install`, then `pnpm nx dev p
 - One branch per feature (`stage/…`, `feat/…`, `fix/…`), PR to `main`, never commit directly to `main`. Follow-ups to a feature in flight stay on its branch.
 - Agents implement and self-check, then stop — commits, pushes and PRs happen only when I ask for them, after I've read the diff.
 - Full conventions: see `AGENTS.md`.
- 

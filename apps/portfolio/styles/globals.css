@@ -91,6 +91,26 @@
   }
 }
 
+/*
+ * Header logo: a quick wind-up — a nudge right, a pull back left, then one
+ * full turn — packed into the first 8% of a 15s cycle, then a long rest.
+ */
+@keyframes logo-spin {
+  0% {
+    rotate: 0deg;
+  }
+  2% {
+    rotate: 10deg;
+  }
+  6% {
+    rotate: -35deg;
+  }
+  8%,
+  100% {
+    rotate: 360deg;
+  }
+}
+
 /* Preloader: the folding-square cube. */
 @keyframes fold-cube {
   0%,
@@ -129,15 +149,5 @@
   }
   100% {
     width: 100%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
   }
 }

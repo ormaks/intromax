@@ -11,6 +11,7 @@ Foundation for every page and every future pet-project app. Getting tokens and t
 ## Scope
 
 **In scope:**
+
 - `modules/config` Tailwind preset: colors, font roles, and spacing extracted from the legacy audit (`docs/legacy-audit.md`) — dark background `#252627`, text `#fff`, muted decorative-text color `#515152`, accent `#08fdd8`, the five custom font roles, custom font files migrated as shared assets
 - `modules/ui` package scaffold (real, buildable, consumed via workspace protocol — not a stub)
 - Layer 1 primitives: Button, Input, Textarea, Card, Link, Typography (heading/body components mapped to the font tokens), Container/layout wrapper
@@ -19,6 +20,7 @@ Foundation for every page and every future pet-project app. Getting tokens and t
 - No Storybook / isolated component preview — components are built and reviewed directly on their real pages
 
 **Out of scope (explicitly):**
+
 - Final page copy/content (Stage 4 — legacy content rewrite)
 - The skills tag-cloud/sphere component (complex enough to warrant its own spec — candidate for Stage 4 alongside the rest of the visual-fidelity pass)
 - Contact form backend/submission logic (Stage 3)
