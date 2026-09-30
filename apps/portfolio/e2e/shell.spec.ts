@@ -26,9 +26,8 @@ test.describe("pages", () => {
       const response = await browserPage.goto(page.path);
       expect(response?.status()).toBe(200);
 
-      // The loader must be in the server HTML so nothing flashes before it.
-      // Checked there rather than with toBeVisible(): on a slow first load
-      // it lifts the moment `load` fires, which is also when goto() returns.
+      // The loader is in the server HTML, so nothing flashes before it. On a
+      // slow first load it lifts on `load`, when goto() returns.
       expect(await response?.text()).toContain('aria-label="Loading"');
 
       const loader = browserPage.getByRole("status", { name: "Loading" });

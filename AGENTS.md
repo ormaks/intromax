@@ -165,4 +165,5 @@ Never self-merge, and never merge on my behalf.
 - Prefer editing/extending `modules/ui` components over duplicating UI logic in an app.
 - TypeScript: no `any` without a comment explaining why.
 - **Code reads as a new project.** Comments, identifiers and tests never reference the legacy site (its files, class names, or "legacy did X"). State the value and the reason on their own terms — "56px headings, 35px on mobile", not "matches legacy `.text_h1`". Legacy comparisons live only in `docs/` (the audit, specs, progress log).
+- **Comments describe the code as it is, not how it got there.** No change history: nothing about what was fixed. Avoid phrasing that reads like a changelog, such as "the header is fixed: …". If a comment only makes sense to someone who saw the diff, it belongs in the spec's Deviations or `docs/PROGRESS.md`. Prefer no comment over a narrative one.
 - Keep components small and colocated with their route unless shared across 2+ apps — then it moves to `modules/ui`.

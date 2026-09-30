@@ -11,11 +11,7 @@ type BurgerMenuProps = {
   ref?: Ref<HTMLButtonElement>;
 };
 
-/*
- * Width and colour are never in the shared class: cn() only joins strings, so
- * `w-full` here would silently beat the open state's `w-0` (and `bg-border`
- * would beat `bg-accent`) — each state sets its own.
- */
+/* Width and colour are set per state, not here: cn() doesn't dedupe utilities. */
 const BAR = "absolute left-0 h-1";
 
 /**

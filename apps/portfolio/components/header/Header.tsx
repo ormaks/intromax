@@ -67,7 +67,7 @@ const TABLET_UP = "(min-width: 30.0625rem)";
  *
  * - **desktop** — a fixed 55px rail down the left edge: the spinning wolf and
  *   wordmark at the top, icon nav in the middle, socials at the bottom. Nav
- *   items widen into a 65px tab on hover and show their label.
+ *   items widen into a 64px tab on hover and show their label.
  * - **tablet** — a fixed 60px bar across the top, everything in one row.
  * - **mobile** — the same bar with the wordmark centred and a burger; opening
  *   it slides the nav in as a row under the bar and the socials into the bar

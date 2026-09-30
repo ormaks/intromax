@@ -39,8 +39,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </a>
 
         <Header />
-        {/* The header is fixed: a top bar below desktop, a left rail on
-            desktop. This clears whichever one is showing. */}
         <main
           id="main"
           className="flex-1 pt-(--height-header) desktop:pt-0 desktop:pl-(--width-header)"
