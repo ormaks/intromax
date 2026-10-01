@@ -6,6 +6,73 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Stage 4d — About
+
+**Status:** Done — spec: `docs/specs/004d-about.md`
+
+**Shipped:**
+
+- `app/about/page.tsx`:
+  - the accent "About me" heading and a six-paragraph word-split bio, written from the CV and functionality-first (no company names)
+  - a meta description
+- `components/musicPlayer/`: our own player over a hidden SoundCloud widget, driven by the Widget API. It has:
+  - an accent play/pause button
+  - title and artist
+  - a glowing progress line that seeks on click, drag or arrow keys, with elapsed/total time
+  - a skeleton while loading, and a "Listen on SoundCloud" link if the widget isn't ready in 10s
+- `components/reactiveWolf/` (desktop only):
+  - the wolf draws in after the preloader
+  - its lines and shapes bend away from the pointer and spring back
+  - a click sends out an accent ripple ring, plus a shockwave that knocks nearby lines outward to wobble back on the same spring
+  - a small spring simulation (`springField.ts`) runs on GSAP's ticker, only while anything moves
+- `modules/ui`: a new `Skeleton` (pulsing placeholder, sized by `className`)
+- `types/soundcloud.ts`: the slice of the Widget API we call
+- `e2e/about.spec.ts`, against a stubbed Widget API (offline, deterministic):
+  - heading and copy, no Instagram
+  - load, play and seek
+  - wolf bend and spring-back, click ripple and shockwave
+  - fallback when blocked
+  - a clean exit from About
+- **Site copy uses "-", never "—"** (new AGENTS.md rule). Existing titles, the contact toast and the logo label were updated to match.
+
+**Decisions:**
+
+- **Instagram dropped; a reactive wolf replaces it.** You chose an interactive piece over a dated embed.
+- **A custom player over the Widget API, not SoundCloud's iframe UI.** The API is current, and the right column now matches the site. SoundCloud's script is the one new external script; SoundCloud itself isn't a new service.
+- **The legacy track is kept.** Hosh's "Tighter" (CamelPhat Remix) has no official SoundCloud upload, only mashups that tend to disappear.
+- **The spring simulation lives outside React** (`createSpringField`). It mutates per-frame state, which React Compiler's lint rules reject in refs, and it's clearer as plain code with a four-method surface.
+- **Sizing uses Tailwind scale values only.** The `PageShell` indents are the one exception.
+
+**Bugs caught during verification:**
+
+- **Leaving About crashed the next page** ("This page couldn't load"). On unmount the widget iframe is already gone, and SoundCloud's `unbind` throws when it messages a detached frame. The cleanup now only talks to the widget while its iframe is connected. The fake widget in the e2e stub throws the same way, so the regression test failed before the fix and passes after.
+- **SoundCloud's widget logged canvas errors in a 1px iframe.** The hidden iframe now takes the player's full box (invisible, click-through) and is allowed `encrypted-media`.
+
+**Review fixes (`code-reviewer` pass):**
+
+- The play button changes its label ("Play" / "Pause") and no longer also sets `aria-pressed`. The two together announced "Pause, pressed", which reads as the opposite state.
+- A track that reports ready with no sound (removed or region-locked) now shows the SoundCloud link instead of an empty player. Covered by a test.
+- The wolf e2e test keeps sweeping the pointer until the lines respond, instead of a fixed wait, so a slow machine can't make it flaky.
+- Not fixed:
+  - A progress event already in flight can snap the seek thumb back for one frame after a drag. It's cosmetic and self-corrects on the next event.
+  - The spring runs per frame, not per unit of time, so it feels slightly livelier on high-refresh screens. It's decorative.
+
+**Verification:**
+
+- Against live SoundCloud in Chrome: the track loads, plays from our button, seeks by click (50% → 123s of 244s) and by arrow keys, with no console errors.
+- The wolf bends and returns to its exact original points.
+- The bio fits without scrolling at 1440×900 and at short desktop heights (1280×600, 1100×620).
+
+**Known leftovers:**
+
+- The shared TextSplit heading a11y name and code-tag spacing (end-of-Stage-4 polish pass).
+- Other pages' e2e tests that visit About hit live SoundCloud. They don't depend on it loading, but they do make the request.
+- Side-by-side screenshots go in the PR.
+
+**Next:** Stage 4 round 2 (Skills sphere, Contact, 404) and the end-of-Stage-4 polish pass.
+
+---
+
 ## Stage 4c — Home
 
 **Status:** Done — spec: `docs/specs/004c-home.md`
@@ -51,7 +118,7 @@ Each entry: what shipped, key decisions made (and why), what's next.
 - **TextSplit headings are read letter by letter.** Chrome's own accessibility tree names the Home heading "H i , I ' m M a k s , …" and About's "A b o u t m e". The Stage 2 note said Chrome read them correctly, so this is worse than recorded. It affects every page, and the likely fix is an `aria-label` on the heading element (a real `h1` role honours it, unlike the generic span tried in Stage 2). Worth its own change before more TextSplit copy lands.
 - Resizing across the tablet or desktop breakpoint replays the Home draw-in, because mounting the wordmark or reflection rebuilds the timeline. Not fixed: it's decorative and only happens on a live resize or rotation.
 
-**Next:** Stage 4d — About. It is blocked on the content questionnaire in `docs/specs/004d-about.md`.
+**Next:** Stage 4d — About.
 
 ---
 

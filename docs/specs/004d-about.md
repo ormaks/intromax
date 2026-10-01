@@ -2,94 +2,111 @@
 
 ## What
 
-The About page, rebuilt to match the legacy site:
+The About page, rebuilt from the legacy layout with two new interactive pieces in the right column:
 
-- **Left:** the accent "About me" heading and the bio, animated word by word.
-- **Right:** live Instagram and SoundCloud embeds. They load in the background behind a new reusable `Skeleton` placeholder from `modules/ui`.
-- **Content:** a rewritten bio.
+- **Left:** the accent "About me" heading and a rewritten bio, animated word by word.
+- **Right (desktop):** a **reactive wolf**, the wolf line art bending away from the cursor and springing back. Below it, a **custom music player** that drives SoundCloud through its Widget API.
+- **Right (tablet/mobile):** the player alone, below the bio.
+- **Shared:** a new reusable `Skeleton` placeholder in `modules/ui`, used for the player's loading state.
 
 ## Why
 
-The legacy bio describes where you were around 2018. The embeds are part of the page's personality. The skeleton keeps the two third-party iframes from making the page feel slow, while still being the real embeds (you ruled out click-to-load).
+The legacy bio describes where you were around 2018. The legacy right column (an old Instagram post and a stock SoundCloud iframe) looked dated and off-brand. Both are now on-brand and interactive, which suits a site where motion is the point.
 
 ## Scope
 
 **In scope:**
 
 - `Skeleton` component in `modules/ui`: generic and any size, exported from the barrel.
-- `EmbedFrame`, a client component in the portfolio app: skeleton → iframe crossfade.
+- `MusicPlayer`: our own player UI over a hidden SoundCloud widget, driven by `SC.Widget`.
+- `ReactiveWolf`: desktop only, decorative.
 - About layout at all three breakpoints.
-- New bio copy and embed URLs.
+- New bio copy and metadata.
 
 **Out of scope:**
 
-- Cookie consent and a privacy banner. Accepted for now: the iframes set third-party cookies on every visit.
-- Click-to-load placeholders (ruled out).
-- Any other page using `Skeleton`, though it's built to be reusable.
+- Instagram. It's dropped.
+- Cookie consent and a privacy banner. Accepted for now: the hidden SoundCloud iframe sets third-party cookies.
+- Playlists, volume control, a waveform. One track, play/pause and seek.
+- The shared TextSplit heading a11y name and the code-tag spacing gap. They're left to an end-of-Stage-4 polish pass.
 
 ## Approach
 
-**`Skeleton`** (`modules/ui/src/skeleton/Skeleton.tsx` + `index.ts`, re-exported from `modules/ui/src/index.ts`):
+**`Skeleton`** (`modules/ui/src/skeleton/`):
 
-- A `div` with `bg-field`, `rounded-control` and Tailwind's `animate-pulse` (turned off with `motion-reduce:animate-none`).
-- Size and shape come entirely from `className`, so any width, height or rounding works, e.g. `<Skeleton className="h-[500px] w-[400px]" />`.
-- `aria-hidden`. The loading announcement belongs to whatever uses it.
-- Stays a server component: pure CSS, no `"use client"`.
-- This is a new public component in `modules/ui`. It's shared because you asked for it in the UI library for reuse. No new dependency.
+- A `div` with `bg-field`, `rounded-control` and `animate-pulse`, sized entirely by `className`.
+- `aria-hidden`; the loading announcement belongs to whatever uses it.
+- A server component, with no new dependency.
+- No reduced-motion override: the site animates for everyone.
 
-**`EmbedFrame`** (`apps/portfolio/components/embedFrame/`, `"use client"`):
+**`MusicPlayer`** (`apps/portfolio/components/musicPlayer/`, `"use client"`):
 
-- Props: `src`, `title` (required, the iframe's accessible name), and `className` for size.
-- Renders a relatively positioned wrapper with `<Skeleton className="absolute inset-0" />`. **The iframe is mounted on the client after hydration**, not in the server render.
-  - Reason: an iframe in the server HTML can finish loading before React attaches `onLoad`. The skeleton would then never clear, a known React quirk.
-  - Hydration happens while the 1.5s preloader is still covering the page, so in practice the iframe still starts loading immediately, in parallel, as agreed.
-- On `onLoad`: the iframe fades in (opacity 0 → 1, 300ms) and the skeleton is removed.
-- `aria-busy` on the wrapper until loaded.
-- A 10s fallback: if `onLoad` never fires (blocked by an ad or privacy blocker), the skeleton is swapped for a small "open on Instagram/SoundCloud" link. This is not click-to-load; it only covers a blocked embed.
-- `loading="eager"`: it's on the first screen of a non-scrolling page, so lazy loading would do nothing.
+- **Widget:**
+  - SoundCloud's Widget API script (`https://w.soundcloud.com/player/api.js`) loads via `next/script` on About only. This is a new external script but not a new service.
+  - The real widget iframe is mounted after hydration and hidden visually and from assistive tech. It has `allow="autoplay"` so our button's click can start playback.
+  - Track: SoundCloud ID 236967116.
+- **UI:**
+  - An accent play/pause `<button>` whose `aria-label` names the action ("Play" / "Pause").
+  - Title and artist.
+  - A progress line in accent with a glowing tip; the preloader bar's look.
+  - Elapsed and total time.
+- **Seeking:** click or drag on the line. The line is also a keyboard `role="slider"`; arrow keys seek ±5s.
+- **States:**
+  - **Loading:** a `Skeleton` in the player's fixed box, so there's no layout shift.
+  - **Ready:** the player UI.
+  - **Blocked:** if the widget isn't ready within 10s (for example, blocked by a privacy extension), or reports no track (removed or region-locked), a "Listen on SoundCloud" link replaces the player.
+- **Cleanup:** on unmount, listeners are unbound and playback stops.
 
-**Layout** (from legacy `about.scss`):
+**`ReactiveWolf`** (`apps/portfolio/components/reactiveWolf/`, `"use client"`):
+
+- Renders `Wolf` large, on desktop only. Touch layouts scroll, and dragging over the art would fight the scroll.
+- **Entrance:** a short top-to-bottom DrawSVG draw-in, gated on `usePreloaderDone()`.
+- **Interaction:**
+  - Every vertex's target is its original position pushed away from the pointer, with a smooth falloff inside a radius.
+  - A spring (velocity and damping) on `gsap.ticker` eases vertices toward their targets. The ticker runs only while anything is moving.
+  - When the pointer leaves, everything springs back.
+  - **Click ripple:** an accent ring expands from the click and fades, while a shockwave knocks the nearby vertices outward (a velocity kick, targets unchanged), so they wobble back on the same spring.
+  - Displacement depends only on a vertex's original position, so the joints shared between lines and filled shapes stay together.
+- Decorative (`aria-hidden`).
+
+**Layout:**
 
 - **Desktop:**
-  - Two columns inside `PageShell`, content indented 6% at 90% width.
-  - Left column 50%: `<h1>` code tags, heading "About me" in **accent**, then paragraphs as `TextSplit byWord` in monospace prose (12px/18px), `margin: 12px 0`.
-  - Right column 35%, `margin-top: -4%`:
-    - **Instagram** frame 400×500, top corners rounded 5px, `#f5f5f5` background behind the embed.
-    - **SoundCloud** frame 400×115 below it.
-    - Legacy absolutely positions SoundCloud at `top: calc(5% + 418px)`, which overlaps the bottom of the Instagram frame. Reproduce the position as it looks in the live side-by-side, not the numbers blindly, and note in the PR what was matched.
-- **Tablet and mobile (≤1024):**
-  - Single column, content indented 9% at 90% width.
-  - Prose 16px/19px with 1px tracking (the 004a prose token).
-  - **Instagram is not mounted at all.** Legacy hid it with `display: none`, but a hidden iframe still downloads everything. `EmbedFrame` for Instagram renders only when `matchMedia("(min-width: 1025px)")` matches.
-  - SoundCloud: full width on mobile, 80% with `margin-top: 30px` on tablet.
-
-**Embed URLs:**
-
-- **Instagram:** `https://www.instagram.com/p/<id>/embed`.
-- **SoundCloud:** the `w.soundcloud.com/player/?url=…` widget with the legacy parameters: `color=%23181818`, `auto_play=false`, `hide_related=false`, `show_comments=true`, `show_user=true`, `show_reposts=false`, `show_teaser=true`.
-- The URLs are hardcoded in `app/about/page.tsx`. They're public embed links, so no env vars are needed.
-
-**Length budget:** desktop doesn't scroll, so the bio must fit the left column at 1440×900 and at the 566px minimum height. Roughly the legacy amount: about 6 short paragraphs, about 120–160 words total. I'll draft to that and check it in the browser.
+  - Two columns inside `PageShell` (indent 6%), vertically centred.
+  - The left column is half the width: code tags, the accent heading, then six word-split paragraphs in monospace prose.
+  - The right column is the reactive wolf above the player.
+- **Tablet and mobile:** a single column (indent 9%), with the player below the bio. The player is full width on mobile and 4/5 width on tablet.
+- **Sizing:** Tailwind scale values only, no custom pixel or percentage sizes. The `PageShell` indents are the only exception; they're the shell's own convention.
+- **Length budget:** desktop doesn't scroll, so the bio must fit at 1440×900 and at the 566px minimum height.
 
 ## Acceptance criteria
 
-- [ ] `Skeleton` is exported from `@intromax/ui`, sized purely by `className`, pulses, and stays still under reduced motion
-- [ ] On About, both skeletons show in the legacy positions and crossfade to the live embeds once loaded. No layout shift when they swap (skeleton and iframe share the same box)
-- [ ] The iframes start loading while the preloader is still visible (network waterfall shows the requests before the overlay clears)
-- [ ] ≤1024px: the Instagram iframe is **not requested** at all (network check); SoundCloud shows
-- [ ] With the embed blocked (request blocked in the browser), the fallback link appears after the timeout
-- [ ] Bio fits without scrolling at 1440×900; word-split hover bounce works; heading is accent
-- [ ] e2e: About renders; the SoundCloud iframe mounts with its `title`; at 375px no Instagram iframe exists
+- [x] `Skeleton` is exported from `@intromax/ui`, sized purely by `className`, and pulses
+- [x] The player shows a skeleton until SoundCloud is ready, then the player UI, with no layout shift
+- [x] Play/pause works from our button; progress moves; click, drag and arrow keys seek
+- [x] With the widget blocked, the "Listen on SoundCloud" link appears after the timeout
+- [x] Desktop: the wolf draws in after the preloader, bends away from the cursor and springs back, and a click sends out a ripple and shockwave; it's absent at ≤1024px
+- [x] Bio fits without scrolling at 1440×900; the word-split hover bounce works; the heading is accent
+- [x] No Instagram iframe anywhere
+- [x] e2e: About renders; the player loads (stubbed widget), plays and seeks; the fallback appears when blocked; the wolf reacts at 1440 and is absent at 375
 - [ ] Side-by-side screenshots (375/800/1440) in the PR
-- [ ] Lint, typecheck, build and e2e pass
+- [x] Lint, typecheck, build and e2e pass
 
-## Open questions — content questionnaire (please answer before implementation)
+## Content (answered)
 
-1. **Current role:** company (Proffiz?), title, since when, and one or two things you own or have built there.
-2. **Previous roles** (Benamix, Sol-Ra, M-Plus, and anything earlier worth a line): years, title, and one highlight each. Two or three of the strongest are enough; the bio is short.
-3. **Focus now:** what you do best and what you're currently growing into (e.g. frontend architecture, monorepos, performance, design systems).
-4. **Personal line:** legacy opened with "20-year-old developer from Ukraine". Keep a personal note (age, city, music since the page has SoundCloud)? What's fine to publish?
-5. **Closing line:** legacy ended with "open to any suggestions". Current stance: open to offers, freelance, or neither?
-6. **Tone:** first person, casual like legacy, or a bit more professional?
-7. **Embeds:** keep the legacy Instagram post (`BEl5FGdDP1R`) and SoundCloud track (`236967116`), or send new URLs?
-8. **Metadata:** About page title and a one-sentence description.
+1. **Bio**, six paragraphs, first person, professional, no company names, "-" rather than "—":
+   - I'm a senior frontend developer, building for the web since 2017 - from enterprise platforms to design-led sites where motion and interaction are the point.
+   - Most recently I worked on a large-scale workforce management SaaS: a modular monorepo across web, iOS and Android. I built complex features across its microservice frontend, maintained the shared design system, and brought AI-powered features into the product.
+   - Along the way I've built a crypto finance platform with payments, a billing integration with complex subscription flows and role-based access, and an internal CRM with analytics dashboards.
+   - I've also owned smaller, animation-heavy projects end to end, from architecture through launch and support.
+   - My focus now is frontend architecture, monorepos, performance and design systems.
+   - Open to new offers - get in touch.
+2. **Music:** the legacy track, "Ereny Youssef – Amy Winehouse – Back To Black". The track you wanted, Hosh's "Tighter" (CamelPhat Remix), has no official SoundCloud upload.
+3. **Metadata:** title "About - Ormaks"; description "About Maks Chytailo, a senior frontend developer building large-scale web platforms, design systems and animation-rich interfaces."
+
+## Deviations during implementation
+
+- **Instagram dropped; the reactive wolf replaces it.** You chose this direction in review.
+- **The custom player replaces the plain SoundCloud iframe and the planned `EmbedFrame`.** SoundCloud's Widget API is current, so the right column can match the site instead of SoundCloud's styling. `EmbedFrame` (skeleton → iframe crossfade) isn't needed without visible iframes.
+- **Click ripple + shockwave on the wolf**, added after review at your request.
+- **Site copy uses "-", never "—" (new AGENTS.md rule). Existing titles, the contact toast and the logo label were updated to match.

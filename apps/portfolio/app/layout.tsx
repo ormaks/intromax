@@ -5,7 +5,7 @@ import { fontVariables } from "@/styles/fonts";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Ormaks — Maks Chytailo",
+  title: "Ormaks - Maks Chytailo",
   description: "Frontend developer. Portfolio, projects and contact.",
   icons: {
     icon: "/favicon.ico",

@@ -126,7 +126,7 @@ export function Header() {
     >
       <Link
         href="/"
-        aria-label="Ormaks — home"
+        aria-label="Ormaks - home"
         onClick={() => setIsOpen(false)}
         className={cn(
           "flex h-full shrink-0 flex-col items-center justify-center no-underline desktop:h-auto desktop:w-header desktop:pt-1",

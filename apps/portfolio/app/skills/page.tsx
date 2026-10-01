@@ -5,7 +5,7 @@ import { PageShell } from "@/components/pageShell";
 import { TextSplit } from "@/components/textSplit";
 
 export const metadata: Metadata = {
-  title: "Skills — Ormaks",
+  title: "Skills - Ormaks",
 };
 
 export default function SkillsPage() {
@@ -23,7 +23,7 @@ export default function SkillsPage() {
        * verifiable now.
        */}
       <Card className="grid min-h-72 max-w-prose place-items-center">
-        <Text>skills sphere — Stage 4</Text>
+        <Text>skills sphere - Stage 4</Text>
       </Card>
     </PageShell>
   );
