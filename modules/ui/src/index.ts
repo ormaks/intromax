@@ -12,7 +12,7 @@
  */
 
 export { Button, ButtonLink } from "./button";
-export type { ButtonLinkProps, ButtonProps } from "./button";
+export type { ButtonLinkProps, ButtonProps, ButtonSize } from "./button";
 export { Card } from "./card";
 export type { CardProps } from "./card";
 export { Container } from "./container";

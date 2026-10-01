@@ -74,6 +74,8 @@ apps/portfolio/
     contact/page.tsx
   actions/             Server Actions ('use server'), one file per feature (contact.ts, ...)
   components/          app-local components (Header, PageShell, TextSplit, ...)
+  hooks/               custom hooks, one file per hook (useMediaQuery.ts, ...)
+  constants/           shared constants, one file per topic (breakpoints.ts, ...)
   e2e/                 Playwright smoke tests
   styles/              globals.css, fonts.ts
   public/              favicon.ico, static assets
@@ -88,7 +90,7 @@ Two files are pinned to `app/` itself and can't move, confirmed by testing rathe
 
 Route implementations live directly in each route's `page.tsx`, not behind a re-export from a separate views folder. Cross-file imports use the `@/*` path alias (declared in `tsconfig.json`, mapped to the app root) rather than relative paths — `@/components/header`, not `../../components/header`.
 
-`lib/`, `hooks/`, `utils/`, `types/` aren't created yet — nothing in the app needs them. Add each when a real piece of shared logic, a custom hook, or a cross-page type actually shows up; an empty folder isn't worth the placeholder.
+`lib/`, `utils/`, `types/` aren't created yet — nothing in the app needs them. Add each when a real piece of shared logic or a cross-page type actually shows up; an empty folder isn't worth the placeholder.
 
 (Update this list as apps/modules are added — keep it accurate, not aspirational.)
 

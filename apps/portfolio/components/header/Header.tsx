@@ -15,6 +15,7 @@ import {
   type IconProps,
 } from "@/components/icons";
 import { Wolf } from "@/components/wolf";
+import { MEDIA } from "@/constants/breakpoints";
 import { BurgerMenu } from "./BurgerMenu";
 
 const NAV_ID = "primary-nav";
@@ -59,9 +60,6 @@ function isActive(pathname: string, href: string): boolean {
 /* Keyboard focus rings sit inside the item — the tablet bar clips overflow. */
 const FOCUS_RING = "focus-visible:-outline-offset-2";
 
-/* Where the burger stops being needed (the tablet breakpoint). */
-const TABLET_UP = "(min-width: 30.0625rem)";
-
 /**
  * Site navigation, in three layouts:
  *
@@ -103,7 +101,7 @@ export function Header() {
     };
     // Growing past mobile width drops the burger entirely; don't leave the
     // menu "open" to reappear when the window shrinks again.
-    const wide = window.matchMedia(TABLET_UP);
+    const wide = window.matchMedia(MEDIA.tabletUp);
     const onResize = () => {
       if (wide.matches) setIsOpen(false);
     };

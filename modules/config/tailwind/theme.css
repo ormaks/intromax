@@ -41,6 +41,8 @@
   --color-danger: #ff4d4d;
   /* The small "Ormaks" wordmark under the header wolf. */
   --color-wordmark: #949292;
+  /* Secondary one-liners under a heading, e.g. the Home subtitle. */
+  --color-subtle: #8d8d8d;
 
   /*
    * Font roles map to the raw per-file variables an app's next/font setup
@@ -71,6 +73,13 @@
 
   --tracking-button: 0.1875em; /* 3px at button size */
   --text-button: 0.8125rem; /* 13px */
+  --text-button--line-height: normal;
+  --text-button-sm: 0.625rem; /* 10px, the compact mobile button */
+  --text-button-sm--line-height: normal;
+
+  /* Small secondary lines: 11px with 1px tracking. */
+  --text-caption: 0.6875rem; /* 11px */
+  --text-caption--letter-spacing: 1px;
 
   /*
    * Header: nav labels, nav and social icons (icons are 1em tall, so
@@ -120,6 +129,7 @@
    *   tablet:     481px+   tablet
    *   desktop:    1025px+  desktop  (the nav becomes a side rail)
    */
+  /* JS that needs these as media queries: apps/portfolio/constants/breakpoints.ts. */
   --breakpoint-*: initial;
   --breakpoint-tablet: 30.0625rem; /* 481px */
   --breakpoint-desktop: 64.0625rem; /* 1025px */

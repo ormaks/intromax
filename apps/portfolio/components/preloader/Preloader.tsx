@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@intromax/ui";
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -16,6 +17,9 @@ const MIN_DURATION_MS = 1500;
  * site behind the loader indefinitely.
  */
 const MAX_DURATION_MS = 5000;
+
+/* How long the overlay takes to fade out once the wait is over. */
+const FADE_MS = 300;
 
 /*
  * The four folding squares, in float order: top-left, top-right,
@@ -54,12 +58,17 @@ type PreloaderProps = {
  * mounted, so anything slow on it — About's iframes — loads in parallel while
  * the loader plays.
  *
+ * When the wait is over it fades out over 300ms, then unmounts. "Done" is
+ * signalled as the fade starts, so page entrance animations begin under the
+ * fading overlay rather than after it.
+ *
  * Starts visible in the server render, so the loader is in the HTML Next
  * sends and nothing flashes before it; the `<noscript>` rule below keeps a
  * JS-less visitor from being stuck behind it.
  */
 export function Preloader({ children }: PreloaderProps) {
   const [isDone, setIsDone] = useState(false);
+  const [isGone, setIsGone] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,9 +96,15 @@ export function Preloader({ children }: PreloaderProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isDone) return;
+    const timer = window.setTimeout(() => setIsGone(true), FADE_MS);
+    return () => window.clearTimeout(timer);
+  }, [isDone]);
+
   return (
     <PreloaderDoneContext value={isDone}>
-      {!isDone && (
+      {!isGone && (
         <>
           {/* Without JS the timer never runs, so nothing would ever remove
               this. Hiding it outright beats a frozen loader. */}
@@ -102,9 +117,14 @@ export function Preloader({ children }: PreloaderProps) {
            * and usable while a page loads.
            */}
           <div
-            className="preloader fixed inset-0 z-20 flex flex-col items-center justify-center bg-background"
+            className={cn(
+              "preloader fixed inset-0 z-20 flex flex-col items-center justify-center bg-background",
+              "transition-opacity duration-300 ease-out",
+              isDone && "pointer-events-none opacity-0",
+            )}
             role="status"
             aria-label="Loading"
+            aria-hidden={isDone || undefined}
           >
             <div className="relative mx-auto mt-12.5 h-18.75 w-18.75 rotate-45">
               {CUBES.map((cube) => (
