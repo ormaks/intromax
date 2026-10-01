@@ -23,7 +23,7 @@ export function ContactForm() {
   // repeatedly for the same result.
   useEffect(() => {
     if (state.status === "success") {
-      toastSuccess("Message sent — thanks, I'll get back to you soon.");
+      toastSuccess("Message sent - thanks, I'll get back to you soon.");
     } else if (state.status === "error") {
       toastError(state.message);
     }

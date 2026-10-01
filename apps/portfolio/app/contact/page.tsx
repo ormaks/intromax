@@ -6,7 +6,7 @@ import { ContactForm } from "@/components/contactForm";
 import { TextSplit } from "@/components/textSplit";
 
 export const metadata: Metadata = {
-  title: "Contact — Ormaks",
+  title: "Contact - Ormaks",
 };
 
 export default function ContactPage() {

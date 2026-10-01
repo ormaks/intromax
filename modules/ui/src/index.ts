@@ -21,6 +21,8 @@ export { Input } from "./input";
 export type { InputProps } from "./input";
 export { Link } from "./link";
 export type { LinkProps } from "./link";
+export { Skeleton } from "./skeleton";
+export type { SkeletonProps } from "./skeleton";
 export { TextArea } from "./textArea";
 export type { TextAreaProps } from "./textArea";
 export { ToastHost, toastError, toastInfo, toastSuccess } from "./toast";
