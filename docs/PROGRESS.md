@@ -6,6 +6,94 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Stage 4e — Skills
+
+**Status:** Done — spec: `docs/specs/004e-skills.md`
+
+**Shipped:**
+
+- `app/skills/page.tsx`:
+  - the "Skills & Experience" heading
+  - word-split prose in which every named technology is a button wired to the sphere
+  - four category chips
+  - a closing line with LinkedIn (new tab) and contact links
+  - a meta description
+- `components/skillSphere/`, the **constellation sphere**:
+  - 34 skills in four categories, each category gathered in its own region (greedy assignment of evenly spread points to tetrahedron centres)
+  - each skill linked to its 4 nearest neighbours
+  - quaternion rotation on GSAP's ticker
+  - words as real list items positioned with transforms; links and pulses on a canvas behind them
+- **Interactions:**
+  - The sphere spins slowly and fades in after the preloader.
+  - The pointer steers it over the sphere column, not over the text.
+  - A **linked word** lights only its skill and turns it to the front.
+  - A **chip** lights its category and turns the group to the front.
+  - A **sphere word** lights itself and its links.
+  - Highlighted words grow to 1.3×, and clicks send pulses along the links.
+  - On release, the slow spin resumes.
+- `SkillFocus`: a small context through which the prose links and chips drive the sphere
+- `TextSplit`:
+  - **link mode** (`href`): the text is one link that bounces as a unit, and external URLs open in a new tab
+  - word-split text is now `inline`, so several segments and links flow as one paragraph
+- `e2e/skills.spec.ts`:
+  - heading, prose and 34 skills
+  - a linked word lights only its skill and centres it
+  - a chip lights exactly its group
+  - steering over the sphere column vs the text column
+  - links
+  - mobile stacking
+
+**Decisions:**
+
+- **Constellation over orbit rings or colour clusters.** You picked it from playable prototypes. It keeps one accent colour, and the links make the skills read as a connected set.
+- **Hybrid rendering.** Words are HTML: crisp text, a real list for screen readers, CSS hover. The canvas draws only lines and dots.
+- **Plain-TS controller** (`sphere.ts`, `geometry.ts`), like the wolf's spring field. Per-frame state lives outside React; components only wire events to it.
+- **Before JavaScript runs, the skills show as a plain wrapped list.** The sphere takes over the layout once it attaches.
+
+**Bug caught during verification:**
+
+- Internal TextSplit links (`/contact`) opened in a new tab. Shell escaping while editing had truncated the external-URL regex, leaving a RegExp object that is always truthy. The e2e test now asserts the contact link has no `target`.
+
+**Review fixes (`code-reviewer` pass):**
+
+- **Focus ownership.** A prose link or chip releases only the focus it set, and leaving a sphere word restores whatever focus is still held. Before, leaving one control could cancel another's keyboard focus. Covered by a new e2e test.
+- **Releasing a focus keeps an active steer** instead of stalling the spin until the next pointer move.
+- **Prose links and chips react to hover only for the mouse.** A tap no longer leaves the sphere locked on a focus.
+- **Both lists carry `role="list"`**, because `list-none` drops list semantics in Safari.
+- **The geometry comment states the actual screen-aligned axes.**
+- **Not changed:** the sphere ignores `prefers-reduced-motion`, following the site-wide decision that everything animates.
+
+**Fixes from your review:**
+
+- **Categories are now truly contiguous.**
+  - The greedy placement filled the largest group (tooling and testing) last and stranded Jest on the far side.
+  - A swap pass now moves points between categories while that pulls each one tighter around its own centre.
+  - e2e checks that every category's skills reach the front together.
+- **Chip clicks pulse again.**
+  - The pulse started from the group's first skill, which was the stranded Jest. None of Jest's links stayed inside the group, so the pulse had nowhere to go.
+  - `pulseGroup` now starts from the group's most central skill and spreads until the group is covered.
+  - e2e checks that the pulse reaches several words.
+- **The turn to a focused skill is a timed ease-in-out** (1.2s, `power2.inOut`), not a per-frame exponential approach, so it starts gently instead of lurching. A new focus mid-turn starts from wherever the sphere is.
+- **Hovering a word on the sphere stops the spin** rather than slowing it. The stop is quick but not abrupt, so the word stays under the cursor even mid-steer, and the spin resumes on leave. Covered by e2e.
+- **Highlights ease in alongside the turn** instead of snapping. Each word and link carries an eased lit amount, settling in about 0.9s. The rest dims, the lit word brightens and grows, and its links light up together while the sphere turns. Only words that are neither lit nor neighbours dim, so the focused word never dips before brightening.
+- **Lit links are dimmer than lit words**, at a brightness between the resting links and the words, so highlighted text stays readable.
+
+**Verification:** lint, typecheck, build and 46/46 e2e pass; the Skills spec also passed 3 repeated runs. In real Chrome:
+
+- a linked word and a chip each turned the sphere to their skills
+- pulses travel along the group's links
+- the page fits at 1440×900 and 1280×600
+- tablet and mobile stack the sphere below the text
+
+**Known leftovers:**
+
+- Pulses aren't asserted by e2e (canvas-only); they were checked visually.
+- The shared TextSplit heading a11y name and code-tag spacing are left for 4h.
+
+**Next:** Stage 4f — Contact.
+
+---
+
 ## Stage 4d — About
 
 **Status:** Done — spec: `docs/specs/004d-about.md`
@@ -69,7 +157,7 @@ Each entry: what shipped, key decisions made (and why), what's next.
 - Other pages' e2e tests that visit About hit live SoundCloud. They don't depend on it loading, but they do make the request.
 - Side-by-side screenshots go in the PR.
 
-**Next:** Stage 4 round 2 (Skills sphere, Contact, 404) and the end-of-Stage-4 polish pass.
+**Next:** Stage 4e — Skills.
 
 ---
 

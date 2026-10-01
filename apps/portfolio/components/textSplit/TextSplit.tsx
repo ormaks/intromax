@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@intromax/ui";
+import { cn, Link } from "@intromax/ui";
 import { Fragment, useRef, useState } from "react";
 
 type TextSplitProps = {
@@ -12,6 +12,11 @@ type TextSplitProps = {
    * is the only choice, so it's a boolean rather than a `splitBy` string.
    */
   byWord?: boolean;
+  /**
+   * Renders the text as one link that bounces as a single unit. External
+   * URLs open in a new tab.
+   */
+  href?: string;
 };
 
 /**
@@ -61,7 +66,11 @@ function AnimatedUnit({ text }: { text: string }) {
 /**
  * The site's signature text treatment: text broken into bounceable units,
  * letter-by-letter by default or word-by-word with `byWord`. Headings split
- * by letter; body prose splits by word.
+ * by letter; body prose splits by word. With `href`, the whole text is one
+ * link and bounces as one unit, for links inline in prose.
+ *
+ * Word-split text is inline, so several segments (and links between them)
+ * flow as one paragraph; letter-split text is an inline block.
  *
  * Accessibility comes from keeping the real characters — including the spaces
  * — as the only text, so an ancestor heading computes its name from them and
@@ -76,11 +85,31 @@ export function TextSplit({
   children,
   className,
   byWord = false,
+  href,
 }: TextSplitProps) {
+  if (href) {
+    const isExternal = /^https?:\/\//.test(href);
+    return (
+      <Link
+        href={href}
+        className={className}
+        {...(isExternal && { target: "_blank", rel: "noopener noreferrer" })}
+      >
+        <AnimatedUnit text={children} />
+      </Link>
+    );
+  }
+
   const units = byWord ? children.split(" ") : Array.from(children);
 
   return (
-    <span className={cn("inline-block whitespace-pre-wrap", className)}>
+    <span
+      className={cn(
+        "whitespace-pre-wrap",
+        byWord ? "inline" : "inline-block",
+        className,
+      )}
+    >
       {units.map((unit, index) => (
         // Units repeat, so the index is the only stable key available.
         <Fragment key={index}>
