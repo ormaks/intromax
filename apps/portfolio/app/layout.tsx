@@ -41,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Header />
         <main
           id="main"
-          className="flex-1 pt-(--height-header) desktop:pt-0 desktop:pl-(--width-header)"
+          className="relative flex-1 pt-(--height-header) desktop:pt-0 desktop:pl-(--width-header)"
         >
           {children}
         </main>

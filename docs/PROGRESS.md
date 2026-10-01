@@ -6,6 +6,55 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Stage 4c — Home
+
+**Status:** Done — spec: `docs/specs/004c-home.md`
+
+**Shipped:**
+
+- `app/page.tsx`:
+  - the three-line TextSplit heading ("Hi," / "I'm Maks," / "frontend developer.")
+  - the subtitle "React / TypeScript / Next.js"
+  - CONTACT ME → `/contact`
+  - a meta description
+- `components/wordmark/`: "Ormaks" outlined from Dancing Script Regular, one path per glyph, generated once by a scratch script with `opentype.js` (never in the repo)
+- `components/homeArt/`:
+  - desktop: the wolf, a 45°-rotated wordmark with a neon glow, and a blurred mirrored reflection
+  - tablet: wolf and upright wordmark, bottom-anchored
+  - mobile: a 2%-opacity wolf watermark
+  - GSAP timeline, gated on `usePreloaderDone()`: 4s DrawSVG wordmark draw with the fill over the last 20%, a ~3s top-to-bottom wolf draw with each filled part (forehead, eyes, nose) fading in as the strokes reach it, and a looping neon blink
+- `Preloader`: fades out over 300ms instead of vanishing. "Done" fires as the fade starts, so the Home draw-in begins under the fading overlay.
+- `TextSplit` bounce: ends on the real `animationend`, not a 1s timer. Re-hovering used to keep resetting the timer, which left the class on and blocked new bounces until the pointer had been away for a second. A hover mid-bounce now queues one replay that starts when the current bounce ends, so quick back-and-forth sweeps keep the letters moving without bounces cutting each other off. Covered by `e2e/textSplit.spec.ts`.
+- `hooks/useMediaQuery.ts`, the app's first hook. It keeps the wordmark off mobile and the reflection off tablet, and 4d reuses it.
+- `PageShell`: new `backdrop` and `inset` props
+- `modules/ui`: `Button`/`ButtonLink` gained `size` (`default` | `responsive`)
+- Theme tokens: `--color-subtle`, `text-caption`, `text-button-sm`; button text line-height `normal`
+- `gsap` + `@gsap/react` in `apps/portfolio` only
+- `e2e/home.spec.ts`:
+  - heading, subtitle and navigation
+  - glyph counts per breakpoint (12 on desktop, 6 on tablet, 0 on mobile)
+  - the blink really dips, with and without reduced motion
+  - clean navigation away mid-animation
+
+**Decisions:**
+
+- **No reduced-motion exceptions, the blink included.** The site is animation-first. A steady-glow fallback was considered because the flicker is close to WCAG's flash limit, and deliberately not taken.
+- **Geometry follows the legacy markup exactly.** The boxes, text origins and positions were measured equal to the live legacy site at 1440 and 800. The glow is kept because Chrome does render the legacy `text-shadow`, which the spec had assumed it didn't.
+- **React decides what mounts (`useMediaQuery`); GSAP decides what animates.** The server renders the full picture, so no-JS visitors see it finished.
+- **Button sizes are complete class sets**, not caller overrides, because `cn()` doesn't dedupe. `PageShell`'s `inset` follows the same rule.
+
+**Known leftovers:**
+
+- **Shared spacing gap:** code tags are 25px tall versus legacy's 33px (`text-tag` line-height), and the tablet/mobile content block starts about 20px higher than legacy. On Home that puts the subtitle and button 4px (desktop) to 33px (tablet) higher. The fix belongs in shared `CodeTag`/`PageShell`, affecting every page, so it's worth its own change.
+- The button renders Open Sans, where legacy fell back to Arial (Open Sans was never loaded there). The button is about 3px taller and a little narrower. This is the 4a font decision, not a regression.
+- Side-by-side screenshots go in the PR.
+- **TextSplit headings are read letter by letter.** Chrome's own accessibility tree names the Home heading "H i , I ' m M a k s , …" and About's "A b o u t m e". The Stage 2 note said Chrome read them correctly, so this is worse than recorded. It affects every page, and the likely fix is an `aria-label` on the heading element (a real `h1` role honours it, unlike the generic span tried in Stage 2). Worth its own change before more TextSplit copy lands.
+- Resizing across the tablet or desktop breakpoint replays the Home draw-in, because mounting the wordmark or reflection rebuilds the timeline. Not fixed: it's decorative and only happens on a live resize or rotation.
+
+**Next:** Stage 4d — About. It is blocked on the content questionnaire in `docs/specs/004d-about.md`.
+
+---
+
 ## Stage 4b — Header
 
 **Status:** Done — spec: `docs/specs/004b-header.md`
@@ -54,7 +103,7 @@ Each entry: what shipped, key decisions made (and why), what's next.
 - The desktop rail's content is about 475px tall, but its `min-height` is 400px. On desktop-width viewports shorter than that, the socials run off the bottom of the fixed rail. Not fixed: `overflow-y: auto` would also clip the hover tab sideways, and viewports that short at 1025px+ wide are rare.
 - The tablet media query in `Header.tsx` repeats `--breakpoint-tablet` as a literal. It's commented, but would drift if the breakpoint changed.
 
-**Next:** Stage 4c — Home. It is blocked on the content questionnaire in `docs/specs/004c-home.md`.
+**Next:** Stage 4c — Home.
 
 ---
 

@@ -56,10 +56,12 @@
  * at least 566px, which only fits a viewport of ~596px or taller
  * (566 + 5% of 596 ≈ 596). Below that the page scrolls rather than clipping.
  */
-@media (min-width: 64.0625rem) and (min-height: 596px) {
-  html,
-  body {
-    overflow: hidden;
+html,
+body {
+  @variant desktop {
+    @media (min-height: 596px) {
+      overflow: hidden;
+    }
   }
 }
 

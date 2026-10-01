@@ -1,0 +1,1 @@
+export { HomeArt } from "./HomeArt";
