@@ -28,7 +28,7 @@ Each entry: what shipped, key decisions made (and why), what's next.
 - `modules/ui`: a new `Skeleton` (pulsing placeholder, sized by `className`)
 - `types/soundcloud.ts`: the slice of the Widget API we call
 - `e2e/about.spec.ts`, against a stubbed Widget API (offline, deterministic):
-  - heading and copy, no Instagram
+  - heading and copy
   - load, play and seek
   - wolf bend and spring-back, click ripple and shockwave
   - fallback when blocked
@@ -37,7 +37,7 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 **Decisions:**
 
-- **Instagram dropped; a reactive wolf replaces it.** You chose an interactive piece over a dated embed.
+- **The right column is a reactive wolf**, an interactive piece you chose in review.
 - **A custom player over the Widget API, not SoundCloud's iframe UI.** The API is current, and the right column now matches the site. SoundCloud's script is the one new external script; SoundCloud itself isn't a new service.
 - **The legacy track is kept.** Hosh's "Tighter" (CamelPhat Remix) has no official SoundCloud upload, only mashups that tend to disappear.
 - **The spring simulation lives outside React** (`createSpringField`). It mutates per-frame state, which React Compiler's lint rules reject in refs, and it's clearer as plain code with a four-method surface.

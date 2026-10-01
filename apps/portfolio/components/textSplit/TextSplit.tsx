@@ -71,9 +71,6 @@ function AnimatedUnit({ text }: { text: string }) {
  * subtree makes Chrome announce the string twice, since it still walks the
  * hidden subtree when computing name from content. `whitespace-pre-wrap` is
  * what stops the spaces collapsing between the inline-block letters.
- *
- * No link mode yet: bouncing links inline within a paragraph (the Skills
- * page copy) is planned but not built.
  */
 export function TextSplit({
   children,

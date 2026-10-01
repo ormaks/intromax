@@ -52,7 +52,8 @@ export const logo = localFont({
   ],
   variable: "--font-dancing-script",
   display: "swap",
-  // One glyph in the header monogram until Stage 4 brings the full wordmark.
+  // Only the small header wordmark uses it, and the preloader covers the
+  // first paint while it loads.
   preload: false,
 });
 

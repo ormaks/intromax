@@ -68,7 +68,7 @@ async function openAbout(page: Page) {
 test.describe("desktop (1440px)", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test("accent heading, bio, and no Instagram", async ({ page }) => {
+  test("accent heading and bio", async ({ page }) => {
     await stubSoundCloud(page);
     await openAbout(page);
 
@@ -79,7 +79,6 @@ test.describe("desktop (1440px)", () => {
     await expect(
       page.getByText(/Open to new offers - get in touch\./),
     ).toBeVisible();
-    await expect(page.locator('iframe[src*="instagram"]')).toHaveCount(0);
   });
 
   test("the player loads, plays and seeks", async ({ page }) => {

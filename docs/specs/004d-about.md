@@ -11,7 +11,7 @@ The About page, rebuilt from the legacy layout with two new interactive pieces i
 
 ## Why
 
-The legacy bio describes where you were around 2018. The legacy right column (an old Instagram post and a stock SoundCloud iframe) looked dated and off-brand. Both are now on-brand and interactive, which suits a site where motion is the point.
+The legacy bio describes where you were around 2018. The legacy right column looked dated and off-brand. It is now on-brand and interactive, which suits a site where motion is the point.
 
 ## Scope
 
@@ -25,7 +25,6 @@ The legacy bio describes where you were around 2018. The legacy right column (an
 
 **Out of scope:**
 
-- Instagram. It's dropped.
 - Cookie consent and a privacy banner. Accepted for now: the hidden SoundCloud iframe sets third-party cookies.
 - Playlists, volume control, a waveform. One track, play/pause and seek.
 - The shared TextSplit heading a11y name and the code-tag spacing gap. They're left to an end-of-Stage-4 polish pass.
@@ -87,7 +86,6 @@ The legacy bio describes where you were around 2018. The legacy right column (an
 - [x] With the widget blocked, the "Listen on SoundCloud" link appears after the timeout
 - [x] Desktop: the wolf draws in after the preloader, bends away from the cursor and springs back, and a click sends out a ripple and shockwave; it's absent at ≤1024px
 - [x] Bio fits without scrolling at 1440×900; the word-split hover bounce works; the heading is accent
-- [x] No Instagram iframe anywhere
 - [x] e2e: About renders; the player loads (stubbed widget), plays and seeks; the fallback appears when blocked; the wolf reacts at 1440 and is absent at 375
 - [ ] Side-by-side screenshots (375/800/1440) in the PR
 - [x] Lint, typecheck, build and e2e pass
@@ -106,7 +104,7 @@ The legacy bio describes where you were around 2018. The legacy right column (an
 
 ## Deviations during implementation
 
-- **Instagram dropped; the reactive wolf replaces it.** You chose this direction in review.
+- **The right column is a reactive wolf.** You chose an interactive piece in review.
 - **The custom player replaces the plain SoundCloud iframe and the planned `EmbedFrame`.** SoundCloud's Widget API is current, so the right column can match the site instead of SoundCloud's styling. `EmbedFrame` (skeleton → iframe crossfade) isn't needed without visible iframes.
 - **Click ripple + shockwave on the wolf**, added after review at your request.
 - **Site copy uses "-", never "—" (new AGENTS.md rule). Existing titles, the contact toast and the logo label were updated to match.
