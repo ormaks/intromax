@@ -21,6 +21,7 @@ Conventions for any AI agent (Claude Code, etc.) working in this repo.
   - `@intromax/config/tsconfig/{base,react,next}.json` — `base` for plain TS, `react` adds DOM + JSX, `next` adds the Next plugin
   - `@intromax/config/eslint/{base,react,next}` — flat configs. `react` and `next` each compose `base`; `next` does **not** compose `react`, because `eslint-config-next` already registers the react-hooks plugin and flat config rejects a duplicate plugin key. Use `react` for shared React modules, `next` for apps.
   - `@intromax/config/tailwind/theme.css` — Tailwind v4 is CSS-first, so the shared "preset" is a stylesheet apps `@import`, not a JS config object
+- `.github/workflows/ci.yml` — CI for every PR and push to `main`, and the Cloudflare deploy (see [Deploy](#deploy))
 
 Nx here is used for task orchestration/caching across apps, not for generating app scaffolding — apps are set up manually following standard Next.js conventions. Nx discovers targets straight from each project's `package.json` scripts; there are no Nx plugins and no Nx Cloud.
 
@@ -80,6 +81,9 @@ apps/portfolio/
   e2e/                 Playwright smoke tests
   styles/              globals.css, fonts.ts
   public/              favicon.ico, static assets
+  wrangler.jsonc       Cloudflare Worker config (see Deploy)
+  open-next.config.ts  OpenNext adapter config
+  .env.example         env vars for `next dev`/`next start`/`preview` (copy to .env.local)
 ```
 
 Routes are flat, real folders under `app/` — `app/about/page.tsx` serves `/about` directly. No route group is needed: an earlier pass wrapped every route in `app/(pages)/` to keep `app/` from mixing route folders with `components/`/`styles/`, but moving those two out to the app root removes the reason for the group entirely, and flat routing is what most Next.js docs and templates assume.
@@ -113,10 +117,35 @@ Route implementations live directly in each route's `page.tsx`, not behind a re-
 - `pnpm nx test <app>` — unit tests (if/when added)
 - `pnpm nx e2e <app>` — Playwright e2e (portfolio: smoke tests in `apps/portfolio/e2e/`, run against a production build on port 3100, using the locally installed Chrome — set `PLAYWRIGHT_CHANNEL=""` to use Playwright's bundled Chromium instead). Specs import `test`/`expect` from `e2e/fixtures.ts`, not `@playwright/test`. Its automatic fixture stubs SoundCloud on every page, so no test hits the network for the music player.
 - `pnpm nx run-many -t lint typecheck` — every project at once
+- `pnpm nx preview portfolio` — OpenNext build, then the Worker locally in `wrangler dev` (reads `.env.local`, like `next dev`). The OpenNext build creates symlinks, so on Windows it needs Developer Mode or an elevated shell.
+- `pnpm nx deploy portfolio` — OpenNext build + `wrangler deploy`. CI runs this; don't run it by hand.
 
 Next.js generates route types (`LayoutProps`, `PageProps`) into `.next/types`, so an app's `typecheck` script must run `next typegen` before `tsc --noEmit` or it fails on a clean checkout.
 
 Before considering any task done: lint, typecheck, and relevant e2e must pass.
+
+### Deploy
+
+The portfolio runs as a Cloudflare Worker (`intromax-portfolio`, on `workers.dev`) built by `@opennextjs/cloudflare`. Every route is prerendered, so `open-next.config.ts` uses the read-only static-assets incremental cache — no R2/KV. A route that revalidates would need a writable cache first.
+
+`.github/workflows/ci.yml`:
+
+- **`checks`** — `nx run-many -t lint typecheck`, then `opennextjs-cloudflare build`, which runs `next build` itself (OpenNext needs Next's standalone output, which a plain `next build` doesn't produce) and bundles the Worker
+- **`e2e`** — the full Playwright suite on bundled Chromium; traces uploaded on failure
+- **`deploy`** — `nx deploy portfolio`, only on a push to `main`, only after both pass
+
+Both run on every PR to `main` and every push to it. A newer push cancels a PR's older run; a run on `main` is never cancelled once started (a newer push only replaces one still queued). Production only ever deploys from `main` through CI.
+
+Secrets:
+
+| Name                      | Purpose                             | Where it's set                                  |
+| ------------------------- | ----------------------------------- | ----------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | wrangler auth for the deploy job    | GitHub → repo secret                            |
+| `CLOUDFLARE_ACCOUNT_ID`   | the Cloudflare account to deploy to | GitHub → repo secret                            |
+| `RESEND_API_KEY`          | contact form sending                | Cloudflare → Worker `intromax-portfolio` secret |
+| `CONTACT_RECIPIENT_EMAIL` | contact form recipient              | Cloudflare → Worker `intromax-portfolio` secret |
+
+The Worker reads its secrets through `process.env`, so app code doesn't change between local and deployed runs. A new runtime secret goes in the Worker's settings and in `.env.example`.
 
 ### Formatting and the pre-commit hook
 

@@ -6,6 +6,51 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Stage 5a — Cloudflare CI/CD
+
+**Status:** Done in code, pending the first CI run and deploy. Spec: `docs/specs/005a-cloudflare-deploy.md`
+
+**Roadmap reordered:** CI/CD moved up to Stage 5, so everything after it ships through a checked pipeline. Pet projects are now Stage 6, testing Stage 7.
+
+**Shipped:**
+
+- **OpenNext adapter in `apps/portfolio`:**
+  - `wrangler.jsonc`: Worker `intromax-portfolio` on `workers.dev`, with `nodejs_compat`, static assets and Workers Logs.
+  - `open-next.config.ts`: the static-assets incremental cache.
+  - `preview` and `deploy` scripts.
+- **New dev dependencies (app-local):** `@opennextjs/cloudflare` and `wrangler`. In `pnpm-workspace.yaml`, `allowBuilds` sets `esbuild` and `workerd` to `false`, because their binaries come as per-platform optional packages.
+- **`.github/workflows/ci.yml`:**
+  - `checks` runs lint and typecheck, then the OpenNext build (`next build` plus the Worker bundle).
+  - `e2e` runs the full suite on bundled Chromium and uploads traces if it fails.
+  - `deploy` runs only on `main`, after both pass.
+  - A newer push cancels an older PR run. A started run on `main` is never cancelled.
+- **`apps/portfolio/.env.example` is restored.** The Stage 3 entry lists it, but it was never committed. `preview` reads the same `.env.local` as `next dev`: when there's no `.dev.vars`, wrangler falls back to `.env` and `.env.local`, so a second example file isn't needed.
+- **Ignores:** ESLint (shared `next` config) and Prettier skip `.open-next/` and `.wrangler/`.
+- **AGENTS.md:** a Deploy section (workflow, secrets table), the new commands, and the app-root files.
+
+**Decisions:**
+
+- **GitHub Actions deploys, not Cloudflare Workers Builds.** Deploys wait for lint, typecheck and e2e, and the pipeline lives in the repo.
+- **No PR previews, no custom domain, no Dependabot** for now.
+- **No R2/KV.** Every route is prerendered and nothing revalidates, so the read-only cache from static assets is enough.
+- **`run-many`, not `nx affected`, in CI.** There's one app. Switching to `affected` makes sense once pet projects land.
+
+**Review fixes (`code-reviewer` pass):**
+
+- **The Worker bundle is built on every PR.** `checks` runs `opennextjs-cloudflare build`. Without it, the first merge to `main` would have been the first time the bundle was ever built.
+- **The first CI run caught a `--skipNextBuild` mistake.** OpenNext reads Next's standalone output, which only its own build turns on (`NEXT_PRIVATE_STANDALONE`), so bundling a plain `next build` failed on a missing `.next/standalone`. `checks` now lets the OpenNext build run the Next build itself, in place of Nx's `build` target.
+- **Concurrency wording** in the workflow and docs is now precise: a run on `main` is never cancelled once started, but a newer push replaces a run that is still queued.
+- **Not changed:**
+  - `compatibility_date` `2026-09-30` is within the installed workerd (1.20260930).
+  - Actions are pinned to major tags rather than SHAs. Secrets only reach the deploy step, and the workflow token is read-only.
+
+**Verification:**
+
+- Lint, typecheck and `next build` pass, and the full e2e suite passes (57/57).
+- **Not verified locally: the OpenNext bundle.** `opennextjs-cloudflare build` gets through `next build`, then fails while copying traced files with `EPERM: symlink`. Windows only lets non-admin shells create symlinks with Developer Mode on. The first Ubuntu CI run is the real check for the Worker bundle, and the first merge to `main` is the first deploy.
+
+---
+
 ## Stage 4 — Wrap-up
 
 **Status:** Done. Every page of the legacy site is rebuilt across 4a-4h:

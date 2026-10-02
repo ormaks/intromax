@@ -21,9 +21,13 @@ catalog:
 
 # sharp/unrs-resolver hoisted from the create-next-app output: neither native
 # build is needed here. Next 16 only reaches for sharp when self-hosting image
-# optimization, and unrs-resolver ships prebuilt binaries. Nx does need its
+# optimization, and unrs-resolver ships prebuilt binaries. esbuild and workerd
+# (pulled in by wrangler) install their binaries as per-platform optional
+# packages, so their postinstall checks aren't needed either. Nx does need its
 # postinstall — that is where its native bindings come from.
 allowBuilds:
+  esbuild: false
   nx: true
   sharp: false
   unrs-resolver: false
+  workerd: false

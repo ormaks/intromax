@@ -8,9 +8,9 @@ import localFont from "next/font/local";
  * The `src` values are plain relative filesystem paths out of this app and
  * into a sibling package's directory — next/font/local does not resolve
  * package specifiers, so this deliberately bypasses the export map. It works
- * because the whole workspace is one tree; it would break if this app were
- * ever built in an isolated context (a Docker build context, `pnpm deploy`).
- * That is a Stage 6 concern, noted here so it is not a surprise then.
+ * because every build (local, CI, the Cloudflare deploy) runs from a full
+ * workspace checkout; it would break in an isolated build context (a Docker
+ * build context, `pnpm deploy`).
  *
  * Each face is exposed as a CSS variable rather than a class, so the shared
  * theme.css owns the role -> font mapping and this file only owns loading.
