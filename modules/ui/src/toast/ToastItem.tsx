@@ -59,7 +59,7 @@ export function ToastItem({ toast }: ToastItemProps) {
       onClick={() => setPhase("exit")}
       className={cn(
         "pointer-events-auto relative w-full cursor-pointer overflow-hidden",
-        "rounded-control border-l-4 bg-surface px-4 py-3 font-tag text-tag",
+        "rounded-control border-l-4 bg-surface px-4 py-3 font-mono text-sm",
         "transition-all duration-300 ease-out",
         phase === "shown"
           ? "translate-x-0 opacity-100"

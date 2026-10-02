@@ -33,6 +33,11 @@ export function TextArea({
           "w-full border-0 bg-field text-base text-foreground",
           "border-b-2 transition-all duration-300",
           "placeholder:text-muted",
+          // Browsers paint autofilled fields with their own light background,
+          // which CSS can't override; deferring that change indefinitely keeps
+          // the field's own colours.
+          "autofill:[transition:background-color_600000s_0s,color_600000s_0s]",
+          "autofill:[-webkit-text-fill-color:var(--color-foreground)] autofill:caret-foreground",
           "hover:bg-[rgba(8,253,216,0.13)] hover:shadow-[inset_0_0_20px_#08fdd96e]",
           "focus:bg-[rgba(8,253,216,0.04)] focus:shadow-[inset_0_0_10px_#08fdd96e] focus:outline-none",
           error ? "border-danger" : "border-accent",
@@ -42,7 +47,11 @@ export function TextArea({
         {...props}
       />
       {error && (
-        <p id={errorId} role="alert" className="font-tag text-tag text-danger">
+        <p
+          id={errorId}
+          role="alert"
+          className="font-mono text-caption text-danger"
+        >
           {error}
         </p>
       )}
@@ -55,7 +64,7 @@ export function TextArea({
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={inputId} className="font-tag text-tag">
+      <label htmlFor={inputId} className="font-mono text-sm">
         {label}
       </label>
       {field}

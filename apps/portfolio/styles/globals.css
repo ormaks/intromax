@@ -113,25 +113,6 @@ body {
   }
 }
 
-/* Preloader: the folding-square cube. */
-@keyframes fold-cube {
-  0%,
-  10% {
-    transform: perspective(140px) rotateX(-180deg);
-    opacity: 0;
-  }
-  25%,
-  75% {
-    transform: perspective(140px) rotateX(0deg);
-    opacity: 1;
-  }
-  90%,
-  100% {
-    transform: perspective(140px) rotateY(180deg);
-    opacity: 0;
-  }
-}
-
 /* Preloader: the label's fade-up. */
 @keyframes preloader-label {
   0% {

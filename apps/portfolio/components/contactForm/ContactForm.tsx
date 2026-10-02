@@ -34,24 +34,28 @@ export function ContactForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <Input
-        id="name"
-        name="name"
-        label="name"
-        autoComplete="name"
-        required
-        error={fieldErrors.name}
-      />
+      {/* Name and email share a row from tablet up, keeping the form short
+          enough for the non-scrolling desktop page. */}
+      <div className="grid gap-4 tablet:grid-cols-2">
+        <Input
+          id="name"
+          name="name"
+          label="name"
+          autoComplete="name"
+          required
+          error={fieldErrors.name}
+        />
 
-      <Input
-        id="email"
-        name="email"
-        label="email"
-        type="email"
-        autoComplete="email"
-        required
-        error={fieldErrors.email}
-      />
+        <Input
+          id="email"
+          name="email"
+          label="email"
+          type="email"
+          autoComplete="email"
+          required
+          error={fieldErrors.email}
+        />
+      </div>
 
       <TextArea
         id="message"
