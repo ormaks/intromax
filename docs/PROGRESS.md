@@ -6,6 +6,37 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Stage 4g — 404
+
+**Status:** Done — spec: `docs/specs/004g-not-found.md`
+
+**Shipped:**
+
+- `app/not-found.tsx` renders `components/notFoundScene/`:
+  - a constellation that has fallen apart into drifting dots
+  - a glitching "404" (CSS keyframes: a scale flicker plus red and blue offset copies) over "Page not found"
+  - "Take me home"
+- Hovering or focusing "Take me home" pulls the dots back into the spinning, linked sphere; leaving scatters them. On touch screens it loops by itself.
+- `components/constellation/` is shared with the preloader. It gained an `assembled` amount (0-1, eased) and exposes `data-assembled` for tests.
+- `e2e/not-found.spec.ts`: a 404 status, the heading and link, and the sphere assembling on hover and scattering on leave. `shell.spec.ts` now checks the 404 heading by its accessible name.
+
+**Decisions:**
+
+- **Broken constellation** over a glitch circle or a terminal error. You picked it from playable concepts. It reuses the preloader's sphere, so the page reads as the site's own visuals breaking and repairing.
+- **The heading's accessible name is "404 - Page not found"** (screen-reader text), while the visible "404" glitch and its copies are `aria-hidden`.
+- **Sphere size:** 240px on mobile, 288px on tablet, 384px on desktop.
+
+**Review fixes (`code-reviewer` pass):**
+
+- `Constellation` follows its canvas's CSS size with a ResizeObserver, so a breakpoint change or phone rotation redraws it at the right scale and sharpness.
+- `data-assembled` is written only when the state flips, not every frame.
+- An e2e test covers keyboard focus on "Take me home" rebuilding the sphere.
+- **Not changed:** the glitch and the sphere ignore `prefers-reduced-motion`, following the site-wide decision that everything animates.
+
+**Next:** Stage 4h — polish pass.
+
+---
+
 ## Stage 4f — Contact
 
 **Status:** Done — spec: `docs/specs/004f-contact.md`
