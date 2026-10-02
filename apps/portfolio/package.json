@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@intromax/config": "workspace:*",
+    "@opennextjs/cloudflare": "^1.20.7",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "catalog:",
@@ -29,6 +32,7 @@
     "@types/react-dom": "catalog:",
     "eslint": "catalog:",
     "tailwindcss": "^4",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "wrangler": "^4.145.0"
   }
 }

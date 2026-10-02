@@ -9,7 +9,15 @@ export default defineConfig([
   ...base,
   ...nextVitals,
   ...nextTs,
-  // eslint-config-next sets these as ignores; restate them so they survive
-  // being composed with other configs.
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  // eslint-config-next sets the first four as ignores; restate them so they
+  // survive being composed with other configs. The last two are the
+  // Cloudflare build output and wrangler's local state.
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    ".open-next/**",
+    ".wrangler/**",
+  ]),
 ]);

@@ -7,3 +7,7 @@ pnpm-lock.yaml
 # Playwright output (belt and braces — also gitignored).
 **/test-results/
 **/playwright-report/
+
+# Cloudflare build output and wrangler state (also gitignored).
+**/.open-next/
+**/.wrangler/
