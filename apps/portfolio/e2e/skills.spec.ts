@@ -1,4 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+import { expect, test } from "./fixtures";
 
 /** Preloader: 1.5s minimum, up to a 5s cap on a slow first load — plus headroom. */
 const PRELOADER_TIMEOUT = 8_000;
@@ -57,7 +59,9 @@ test.describe("desktop (1440px)", () => {
 
   test("heading, prose and 34 skills", async ({ page }) => {
     await openSkills(page);
-    await expect(page.locator("main h1")).toHaveText(/Skills\s*&\s*Experience/);
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Skills & Experience" }),
+    ).toBeVisible();
     await expect(page.getByRole("button", { name: "GraphQL" })).toBeVisible();
     await expect(words(page)).toHaveCount(34);
   });
@@ -150,17 +154,31 @@ test.describe("desktop (1440px)", () => {
     const chip = page.getByRole("button", { name: "tooling and testing" });
     await chip.hover();
     await page.waitForTimeout(2_000);
-    const settled = await litScales(page);
-
+    // Each word a pulse reaches swells briefly, so watch every frame for a
+    // few seconds after the click rather than polling for the swell.
+    const swollen = page.evaluate(
+      () =>
+        new Promise<number>((resolve) => {
+          const words = Array.from(
+            document.querySelectorAll<HTMLElement>('[aria-label="Skills"] li'),
+          );
+          const scale = (li: HTMLElement) =>
+            Number(/scale\(([\d.]+)\)/.exec(li.style.transform)?.[1] ?? 0);
+          const lit = words.filter((li) => Number(li.style.opacity) >= 0.99);
+          const settled = new Map(lit.map((li) => [li, scale(li)]));
+          const grew = new Set<HTMLElement>();
+          const end = performance.now() + 3_000;
+          const sample = () => {
+            for (const [li, rest] of settled)
+              if (scale(li) > rest + 0.08) grew.add(li);
+            if (performance.now() < end) requestAnimationFrame(sample);
+            else resolve(grew.size);
+          };
+          requestAnimationFrame(sample);
+        }),
+    );
     await chip.click();
-    // Each word a pulse reaches swells briefly.
-    await expect
-      .poll(async () => {
-        const now = await litScales(page);
-        return now.filter((scale, i) => scale > (settled[i] ?? scale) + 0.08)
-          .length;
-      })
-      .toBeGreaterThan(2);
+    expect(await swollen).toBeGreaterThan(2);
   });
 
   test("hovering a word on the sphere stops the spin", async ({ page }) => {

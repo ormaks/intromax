@@ -111,7 +111,7 @@ Route implementations live directly in each route's `page.tsx`, not behind a re-
 - `pnpm nx lint <app>` — lint
 - `pnpm nx typecheck <app>` — typecheck
 - `pnpm nx test <app>` — unit tests (if/when added)
-- `pnpm nx e2e <app>` — Playwright e2e (portfolio: smoke tests in `apps/portfolio/e2e/`, run against a production build on port 3100, using the locally installed Chrome — set `PLAYWRIGHT_CHANNEL=""` to use Playwright's bundled Chromium instead)
+- `pnpm nx e2e <app>` — Playwright e2e (portfolio: smoke tests in `apps/portfolio/e2e/`, run against a production build on port 3100, using the locally installed Chrome — set `PLAYWRIGHT_CHANNEL=""` to use Playwright's bundled Chromium instead). Specs import `test`/`expect` from `e2e/fixtures.ts`, not `@playwright/test`. Its automatic fixture stubs SoundCloud on every page, so no test hits the network for the music player.
 - `pnpm nx run-many -t lint typecheck` — every project at once
 
 Next.js generates route types (`LayoutProps`, `PageProps`) into `.next/types`, so an app's `typecheck` script must run `next typegen` before `tsc --noEmit` or it fails on a clean checkout.

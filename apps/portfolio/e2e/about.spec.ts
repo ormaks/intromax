@@ -1,57 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+import { expect, test } from "./fixtures";
 
 /** Preloader: 1.5s minimum, up to a 5s cap on a slow first load — plus headroom. */
 const PRELOADER_TIMEOUT = 8_000;
 /** The player gives up on SoundCloud after 10s. */
 const BLOCKED_TIMEOUT = 13_000;
-
-const DURATION_MS = 200_000;
-
-/*
- * A stand-in for SoundCloud's Widget API: reports ready shortly after being
- * bound, emits play/pause/progress like the real one, and records every call
- * on `window.scCalls` so tests can assert what the player asked for.
- */
-const FAKE_WIDGET_API = `
-  window.scCalls = [];
-  const Events = { READY: "ready", PLAY: "play", PAUSE: "pause", FINISH: "finish", PLAY_PROGRESS: "playProgress" };
-  function Widget(iframe) {
-    const handlers = {};
-    // Like the real API: messaging a detached frame throws.
-    const post = () => { if (!iframe.isConnected) throw new TypeError("Cannot read properties of null (reading 'postMessage')"); };
-    const emit = (event, data) => handlers[event] && handlers[event](data);
-    setTimeout(() => emit("ready"), 50);
-    return {
-      bind: (event, fn) => { handlers[event] = fn; },
-      unbind: (event) => { post(); delete handlers[event]; },
-      play: () => { scCalls.push("play"); emit("play"); emit("playProgress", { currentPosition: 1000, relativePosition: 0.005 }); },
-      pause: () => { post(); scCalls.push("pause"); emit("pause"); },
-      seekTo: (ms) => { scCalls.push("seek:" + Math.round(ms)); },
-      getCurrentSound: (cb) => cb(window.scNoSound ? null : { title: "Test Track", duration: ${DURATION_MS}, permalink_url: "https://soundcloud.com/test", user: { username: "Test Artist" } }),
-    };
-  }
-  Widget.Events = Events;
-  window.SC = { Widget };
-`;
-
-async function stubSoundCloud(
-  page: Page,
-  { blocked = false, noSound = false } = {},
-) {
-  if (noSound)
-    await page.addInitScript(() => Object.assign(window, { scNoSound: true }));
-  await page.route("https://w.soundcloud.com/player/api.js", (route) =>
-    blocked
-      ? route.abort()
-      : route.fulfill({
-          contentType: "text/javascript",
-          body: FAKE_WIDGET_API,
-        }),
-  );
-  await page.route("https://w.soundcloud.com/player/?**", (route) =>
-    route.fulfill({ contentType: "text/html", body: "<!doctype html>" }),
-  );
-}
 
 const calls = (page: Page) =>
   page.evaluate(
@@ -69,7 +23,6 @@ test.describe("desktop (1440px)", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
   test("accent heading and bio", async ({ page }) => {
-    await stubSoundCloud(page);
     await openAbout(page);
 
     await expect(page.locator("main h1")).toHaveCSS(
@@ -82,7 +35,6 @@ test.describe("desktop (1440px)", () => {
   });
 
   test("the player loads, plays and seeks", async ({ page }) => {
-    await stubSoundCloud(page);
     await openAbout(page);
 
     const player = page.getByRole("group", { name: "Music player" });
@@ -109,7 +61,6 @@ test.describe("desktop (1440px)", () => {
   test("the wolf bends away from the pointer and springs back", async ({
     page,
   }) => {
-    await stubSoundCloud(page);
     await openAbout(page);
 
     const wolf = page.getByTestId("reactive-wolf").locator("svg");
@@ -150,7 +101,6 @@ test.describe("desktop (1440px)", () => {
   test("a click on the wolf sends out a ripple and a shockwave", async ({
     page,
   }) => {
-    await stubSoundCloud(page);
     await openAbout(page);
 
     const wolf = page.getByTestId("reactive-wolf").locator("svg");
@@ -193,7 +143,6 @@ test.describe("desktop (1440px)", () => {
 test("leaving About while the player is loaded is clean", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await stubSoundCloud(page);
   await openAbout(page);
   await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
 
@@ -202,35 +151,40 @@ test("leaving About while the player is loaded is clean", async ({ page }) => {
     .getByRole("link", { name: /contact/i })
     .click();
   await expect(page).toHaveURL(/\/contact$/);
-  await expect(page.locator("main h1")).toHaveText(/Contact/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Contact me" }),
+  ).toBeVisible();
   expect(errors).toEqual([]);
 });
 
-test("a blocked widget falls back to a SoundCloud link", async ({ page }) => {
-  await stubSoundCloud(page, { blocked: true });
-  await openAbout(page);
+test.describe("blocked widget", () => {
+  test.use({ soundCloud: "blocked" });
 
-  await expect(
-    page.getByRole("link", { name: "Listen on SoundCloud" }),
-  ).toBeVisible({ timeout: BLOCKED_TIMEOUT });
+  test("falls back to a SoundCloud link", async ({ page }) => {
+    await openAbout(page);
+
+    await expect(
+      page.getByRole("link", { name: "Listen on SoundCloud" }),
+    ).toBeVisible({ timeout: BLOCKED_TIMEOUT });
+  });
 });
 
-test("a track that reports no sound falls back to the link", async ({
-  page,
-}) => {
-  await stubSoundCloud(page, { noSound: true });
-  await openAbout(page);
+test.describe("track with no sound", () => {
+  test.use({ soundCloud: "no-sound" });
 
-  await expect(
-    page.getByRole("link", { name: "Listen on SoundCloud" }),
-  ).toBeVisible();
+  test("falls back to the link", async ({ page }) => {
+    await openAbout(page);
+
+    await expect(
+      page.getByRole("link", { name: "Listen on SoundCloud" }),
+    ).toBeVisible();
+  });
 });
 
 test.describe("mobile (375px)", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
   test("player without the wolf", async ({ page }) => {
-    await stubSoundCloud(page);
     await openAbout(page);
 
     await expect(page.getByRole("button", { name: "Play" })).toBeVisible();

@@ -1,22 +1,14 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 const PAGES = [
-  { path: "/", heading: /I'm Maks/ },
-  { path: "/about", heading: /About me/ },
-  { path: "/skills", heading: /Skills/ },
-  { path: "/contact", heading: /Contact/ },
+  { path: "/", heading: "Hi, I'm Maks, frontend developer." },
+  { path: "/about", heading: "About me" },
+  { path: "/skills", heading: "Skills & Experience" },
+  { path: "/contact", heading: "Contact me" },
 ] as const;
 
 /** Preloader: 1.5s minimum, up to a 5s cap on a slow first load — plus headroom. */
 const PRELOADER_TIMEOUT = 8_000;
-
-/*
- * Headings are matched by text, not by accessible name: TextSplit wraps each
- * letter in an inline-block span, and Playwright's accessible-name algorithm
- * reads that as "A b o u t m e". (Chrome's own accessibility tree reads it
- * correctly — see the TextSplit screen-reader caveat in docs/PROGRESS.md.)
- */
-const pageHeading = (page: Page) => page.locator("main h1");
 
 test.describe("pages", () => {
   for (const page of PAGES) {
@@ -33,7 +25,9 @@ test.describe("pages", () => {
       const loader = browserPage.getByRole("status", { name: "Loading" });
       await expect(loader).toBeHidden({ timeout: PRELOADER_TIMEOUT });
 
-      await expect(pageHeading(browserPage)).toHaveText(page.heading);
+      await expect(
+        browserPage.getByRole("heading", { level: 1, name: page.heading }),
+      ).toBeVisible();
     });
   }
 });
@@ -74,7 +68,9 @@ test("client-side navigation replays the preloader", async ({ page }) => {
   await expect(page).toHaveURL(/\/about$/);
   await expect(loader).toBeVisible();
   await expect(loader).toBeHidden({ timeout: PRELOADER_TIMEOUT });
-  await expect(pageHeading(page)).toHaveText(/About me/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "About me" }),
+  ).toBeVisible();
 });
 
 test.describe("desktop scroll lock", () => {

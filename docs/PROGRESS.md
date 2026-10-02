@@ -6,6 +6,51 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Stage 4 — Wrap-up
+
+**Status:** Done. Every page of the legacy site is rebuilt across 4a-4h:
+
+- the global shell
+- the header
+- Home, About, Skills and Contact
+- the 404
+- a closing polish pass
+
+**Carried forward:**
+
+- No NVDA/VoiceOver pass yet. Accessibility has been checked through Chrome's accessibility tree and Playwright's role queries.
+- Animations deliberately ignore `prefers-reduced-motion` (a site-wide decision).
+
+**Next:** Stage 5 — pet-projects section.
+
+---
+
+## Stage 4h — Polish pass
+
+**Status:** Done — spec: `docs/specs/004h-polish.md`
+
+**Shipped:**
+
+- **TextSplit headings read as whole words.** The letters sit in an `aria-hidden` wrapper next to an `sr-only` copy of the text.
+  - Chrome's accessibility tree now names every page heading once and normally ("About me", "Hi, I'm Maks, frontend developer.", and so on).
+  - This closes the Stage 4c note about letter-by-letter headings.
+- **e2e:** headings are asserted with `getByRole("heading", { level: 1, name })` using exact names.
+- **`e2e/fixtures.ts`:**
+  - Every spec imports `test`/`expect` from it.
+  - An automatic fixture stubs SoundCloud on every page, so a full run makes no SoundCloud requests (checked with a catch-all route logger).
+  - The player's fallback tests pick `test.use({ soundCloud: "blocked" | "no-sound" })`.
+- **`modules/common`:** the unused `SITE_NAME` is gone. `PetProject` stays for Stage 5.
+- **Skills e2e:** the "pulses through its group" test samples every frame instead of polling, which removes a flake under full-suite load.
+
+**Decisions:**
+
+- **`sr-only` copy instead of `aria-label` on the heading.**
+  - The copy lives inside TextSplit, so every heading gets it without callers doing anything.
+  - Chrome reads the name once, not twice.
+- **Out of scope (your call):** code-tag spacing, a side-by-side visual pass, replaying Home on resize, and `tailwind-merge`.
+
+---
+
 ## Stage 4g — 404
 
 **Status:** Done — spec: `docs/specs/004g-not-found.md`
