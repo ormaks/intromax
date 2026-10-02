@@ -39,8 +39,6 @@
   --color-field: #37393b;
   /* Field errors: a red underline plus inline message. */
   --color-danger: #ff4d4d;
-  /* The small "Ormaks" wordmark under the header wolf. */
-  --color-wordmark: #949292;
   /* Secondary one-liners under a heading, e.g. the Home subtitle. */
   --color-subtle: #8d8d8d;
 
@@ -58,7 +56,6 @@
   --font-sans: var(--font-open-sans), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-millunium), ui-sans-serif, sans-serif;
   --font-tag: var(--font-la-belle-aurore), cursive;
-  --font-logo: var(--font-dancing-script), cursive;
 
   /*
    * Type scale: headings 56px, tag text 18px, small text 11-13px. Headings step down on
@@ -82,15 +79,12 @@
   --text-caption--letter-spacing: 1px;
 
   /*
-   * Header: nav labels, nav and social icons (icons are 1em tall, so
-   * font-size is what sizes them), and the large mobile wordmark.
+   * Header: nav labels, and nav and social icons (icons are 1em tall, so
+   * font-size is what sizes them).
    */
   --text-label: 0.5rem; /* 8px */
   --text-icon: 1.375rem; /* 22px */
   --text-icon-sm: 0.9375rem; /* 15px */
-  --text-logo: 1.9375rem; /* 31px */
-  --text-logo--line-height: 1;
-  --text-logo--letter-spacing: 2.5px;
 
   /*
    * Named sizes for exact pixel values that recur across components.

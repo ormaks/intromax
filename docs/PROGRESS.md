@@ -6,6 +6,71 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Stage 4f — Contact
+
+**Status:** Done — spec: `docs/specs/004f-contact.md`
+
+**Shipped:**
+
+- `app/contact/page.tsx`:
+  - **Left:** the accent "Contact me" heading, the intro, and the form.
+  - **Right:** the channels above the CV card.
+  - A meta description.
+- `components/contactChannels/`: GitHub, email, LinkedIn, Instagram and Telegram as round icon links.
+  - With a mouse, each leans toward the pointer (GSAP) and springs back with an elastic ease.
+  - Hover or focus turns it accent and types its handle under the row.
+- `components/cvCard/`: a page-1 thumbnail that tilts on hover, with preview and download.
+  - **Tablet and up:** preview opens a native `<dialog>` with the PDF in the browser's own viewer.
+  - **Mobile:** preview opens the PDF in a new tab.
+- `components/risingLetters/`: wraps the form, so every typed character rises from the exact caret position (found with a mirror of the field) and fades. Pastes send up at most 12 characters.
+- `public/cv/`: the CV PDF, plus a page-1 thumbnail rendered once with pdf.js in a scratch script.
+- `GithubIcon` and `LinkedinIcon` (Font Awesome Free 7, CC BY 4.0) in the icon set.
+- `ContactForm`: name and email share a row from tablet up.
+- `e2e/contact.spec.ts`: heading and form, channel links and handle typing, the CV dialog and Escape, rising letters cleaned up, the short-desktop fit, and the mobile preview link.
+
+**Decisions:**
+
+- **No map** (it would show the city), and **no live message preview.** The preview was tried in a mockup and dropped.
+- **The CV is published as is**, phone numbers included. You accepted that.
+- **Name and email on one row.** At 1280×600 the stacked form overflowed the non-scrolling desktop page by about 95px, which hid the Send button. One row fixes that.
+- **The CV preview uses the browser's PDF viewer** rather than a PDF library: no dependency, and zoom, pages and print for free.
+
+**Polish from your review (riding along in this PR):**
+
+- **Contact:** small code-tag titles above the right column's blocks, `<find me />` and `<cv />` (`CodeTag` gained a `selfClosing` form).
+- **Autofilled fields keep the dark field colour.** Chrome paints autofilled inputs with its own light background, which CSS can't override directly. `Input` and `TextArea` (`modules/ui`) defer that background change indefinitely with a very long `:autofill` transition and pin the text colour.
+- **Readable form text:** labels, inline field errors and toasts switched from the handwriting tag font to the monospace prose font (`modules/ui` Input, TextArea, Toast).
+- **Header:** the "Ormaks" text is gone; the spinning wolf stands alone. Dancing Script was only used there, so its font load and the `--font-logo`, `--color-wordmark` and `text-logo` tokens are removed too. The Home wordmark is outlined paths and doesn't need the font.
+- **Preloader:**
+  - The folding squares are replaced by a **mini constellation**: a small, tilted, spinning sphere of 18 linked dots on a canvas (`preloader/Constellation.tsx`), echoing the Skills sphere. You picked it from five playable concepts, after trying a wolf draw-in first.
+  - The bar's tip is now a single glowing dot. The old tip laid a background-coloured fade over the fill, which showed as a dark patch with stray glow.
+  - About's wolf draw-in lives in `components/wolf/drawIn.ts` (`drawWolfIn`, `hideWolf`).
+- **Not a site bug:** the "children should not have changed" console error that paused the debugger as the loader finished comes from the React DevTools extension's own hook (`installHook.js`), not app code. Updating the extension, or not pausing on caught exceptions, avoids it, and it never reaches visitors.
+- **e2e:** About's wolf tests target the reactive wolf by test id, so they can never pick up another wolf on the page.
+
+**Review fixes (`code-reviewer` pass):**
+
+- **Letters typed in the email field rose from its left edge.** `type="email"` inputs report no `selectionStart`, so the caret mirror was empty. The caret now falls back to the end of the value, and an e2e test checks that email letters start well along the field.
+- **Caret mirror width:** the mirror takes the field's width minus any scrollbar, so a long message in the textarea wraps the same way.
+- **Channel handle:** hover and keyboard focus are tracked separately. Leaving one icon with the pointer no longer blanks the handle of another that still has focus.
+- **CV thumbnail:** re-rendered at 120px (25KB, was 203KB) and served `unoptimized`. It doesn't depend on Next's image optimizer, which isn't set up for the Cloudflare deploy yet.
+- **e2e:** channel links are scoped to their own list, and the letter overlay has a test id.
+- **Not changed:** IME and autocorrect input (`insertCompositionText`, `insertReplacementText`) don't send letters up. It's decorative, and most mobile keyboards go through those.
+- **PDF metadata checked:** author, Canva and design IDs; nothing sensitive. The embedded title reads "Chytailo_CV, копия, копия" and shows in the viewer's title bar, so it's worth fixing on the next Canva export.
+
+**Verification:**
+
+- Lint and typecheck pass; `contact.spec.ts` passes (8/8); the full suite passes (54/54) after the polish round.
+- In real Chrome:
+  - layout at 1440, 800 and 375, and the fit at 1280×600
+  - the magnetic hover and typed handle
+  - the CV dialog showing the PDF
+  - letters rising from the caret
+
+**Next:** Stage 4g — 404.
+
+---
+
 ## Stage 4e — Skills
 
 **Status:** Done — spec: `docs/specs/004e-skills.md`

@@ -36,27 +36,6 @@ export const tag = localFont({
   preload: false,
 });
 
-/** Dancing Script — the "Ormaks" wordmark. */
-export const logo = localFont({
-  src: [
-    {
-      path: "../../../modules/config/tailwind/fonts/DancingScript-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../../modules/config/tailwind/fonts/DancingScript-Bold.ttf",
-      weight: "700",
-      style: "normal",
-    },
-  ],
-  variable: "--font-dancing-script",
-  display: "swap",
-  // Only the small header wordmark uses it, and the preloader covers the
-  // first paint while it loads.
-  preload: false,
-});
-
 /**
  * Open Sans — buttons only. Page prose is the system monospace stack.
  */
@@ -69,6 +48,5 @@ export const sans = Open_Sans({
 export const fontVariables = [
   heading.variable,
   tag.variable,
-  logo.variable,
   sans.variable,
 ].join(" ");

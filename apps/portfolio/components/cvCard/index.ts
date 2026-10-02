@@ -1,0 +1,1 @@
+export { CvCard } from "./CvCard";

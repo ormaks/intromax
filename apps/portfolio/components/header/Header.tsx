@@ -63,13 +63,13 @@ const FOCUS_RING = "focus-visible:-outline-offset-2";
 /**
  * Site navigation, in three layouts:
  *
- * - **desktop** — a fixed 55px rail down the left edge: the spinning wolf and
- *   wordmark at the top, icon nav in the middle, socials at the bottom. Nav
+ * - **desktop** — a fixed 55px rail down the left edge: the spinning wolf at
+ *   the top, icon nav in the middle, socials at the bottom. Nav
  *   items widen into a 64px tab on hover and show their label.
  * - **tablet** — a fixed 60px bar across the top, everything in one row.
- * - **mobile** — the same bar with the wordmark centred and a burger; opening
+ * - **mobile** — the same bar with a burger; opening
  *   it slides the nav in as a row under the bar and the socials into the bar
- *   itself, in place of the wordmark.
+ *   itself.
  *
  * Links are plain `next/link` rather than the shared `Link`: that one is an
  * inline accent link with its own colour and hover defaults, which would
@@ -139,20 +139,6 @@ export function Header() {
           strokeWidth={3}
           className="h-14 w-auto animate-[logo-spin_15s_ease-in-out_infinite] text-accent tablet:h-11 desktop:h-14"
         />
-        <span
-          className={cn(
-            "font-logo leading-none transition-all duration-300 ease-linear",
-            // mobile: large and centred in the bar
-            "absolute top-2 left-[37%] text-logo text-accent",
-            isOpen && "opacity-0",
-            // tablet/desktop: small, tucked under the wolf
-            "tablet:static tablet:-mt-1.5 tablet:text-lg tablet:tracking-normal tablet:text-wordmark tablet:opacity-100",
-            "tablet:[text-shadow:0_0_1px_rgb(8_253_216/0.55)]",
-            "desktop:mt-0 desktop:mb-1",
-          )}
-        >
-          Ormaks
-        </span>
       </Link>
 
       <nav
@@ -204,7 +190,7 @@ export function Header() {
       <ul
         className={cn(
           "m-0 flex list-none flex-row items-center justify-evenly p-0",
-          // mobile: slides into the middle of the bar, replacing the wordmark
+          // mobile: slides into the middle of the bar
           "absolute top-0 h-(--height-header) min-w-44 transition-[left,visibility] duration-300 ease-linear",
           isOpen ? "visible left-[calc(50%-90px)]" : "invisible left-full",
           "tablet:visible tablet:static tablet:min-w-24 tablet:transition-none",

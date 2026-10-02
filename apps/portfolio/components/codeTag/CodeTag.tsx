@@ -5,6 +5,8 @@ type CodeTagProps = {
   name: string;
   /** Renders the closing form, `</h1>`. */
   closing?: boolean;
+  /** Renders the self-closing form, `<cv />`, used as a small section title. */
+  selfClosing?: boolean;
   /**
    * Prefixes three non-breaking spaces. The page frame indents `<body>` and
    * `</body>` this way, so `</html>` sits further left than the body tags —
@@ -26,12 +28,13 @@ type CodeTagProps = {
 export function CodeTag({
   name,
   closing = false,
+  selfClosing = false,
   indent = false,
   className,
 }: CodeTagProps) {
   return (
     <Text variant="tag" aria-hidden="true" className={className}>
-      {`${indent ? "   " : ""}<${closing ? "/" : ""}${name}>`}
+      {`${indent ? "   " : ""}<${closing ? "/" : ""}${name}${selfClosing ? " /" : ""}>`}
     </Text>
   );
 }

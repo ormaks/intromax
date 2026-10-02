@@ -112,7 +112,7 @@ test.describe("desktop (1440px)", () => {
     await stubSoundCloud(page);
     await openAbout(page);
 
-    const wolf = page.locator("main svg:has([data-wolf-line])");
+    const wolf = page.getByTestId("reactive-wolf").locator("svg");
     const box = (await wolf.boundingBox())!;
     const line = wolf.locator("[data-wolf-line]").nth(30);
     const original = await line.getAttribute("points");
@@ -153,7 +153,7 @@ test.describe("desktop (1440px)", () => {
     await stubSoundCloud(page);
     await openAbout(page);
 
-    const wolf = page.locator("main svg:has([data-wolf-line])");
+    const wolf = page.getByTestId("reactive-wolf").locator("svg");
     const box = (await wolf.boundingBox())!;
     const line = wolf.locator("[data-wolf-line]").nth(30);
     const original = await line.getAttribute("points");
@@ -234,6 +234,6 @@ test.describe("mobile (375px)", () => {
     await openAbout(page);
 
     await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
-    await expect(page.locator("main [data-wolf-line]")).toHaveCount(0);
+    await expect(page.getByTestId("reactive-wolf")).toHaveCount(0);
   });
 });

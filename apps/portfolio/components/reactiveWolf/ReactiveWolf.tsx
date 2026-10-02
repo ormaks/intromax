@@ -3,29 +3,19 @@
 import { useGSAP } from "@gsap/react";
 import { cn } from "@intromax/ui";
 import gsap from "gsap";
-import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { useRef, useState, type PointerEvent } from "react";
 import { usePreloaderDone } from "@/components/preloader";
-import { Wolf } from "@/components/wolf";
+import { drawWolfIn, hideWolf, Wolf } from "@/components/wolf";
 import { MEDIA } from "@/constants/breakpoints";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { createSpringField } from "./springField";
 
-gsap.registerPlugin(useGSAP, DrawSVGPlugin);
+gsap.registerPlugin(useGSAP);
 
-/* The wolf's viewBox height, which the entrance stagger is spread over. */
-const WOLF_HEIGHT = 286;
+/* The entrance: each line draws over this long, the lowest starting at
+   LAST_LINE_AT, so it finishes at ~1.5s. */
 const LINE_DRAW_DURATION = 0.4;
-/* The lowest line starts here, so the entrance finishes at ~1.5s. */
 const LAST_LINE_AT = 1.1;
-
-type Shape = SVGPolylineElement | SVGPolygonElement;
-
-/** Entrance delay for a part: top to bottom by its highest point. */
-function byHeight(part: Shape): number {
-  const top = Math.min(...Array.from(part.points, (point) => point.y));
-  return (top / WOLF_HEIGHT) * LAST_LINE_AT;
-}
 
 /** An accent ring that expands from the pointer and fades, then removes itself. */
 function spawnRipple(
@@ -71,48 +61,25 @@ export function ReactiveWolf({ className }: { className?: string }) {
 
   const { contextSafe } = useGSAP(
     () => {
-      if (!isDesktop) return;
-
-      const lines = gsap.utils.toArray<SVGPolylineElement>("[data-wolf-line]");
-      const shapes = gsap.utils.toArray<SVGPolygonElement>("[data-wolf-shape]");
+      const svg = scope.current?.querySelector("svg");
+      if (!isDesktop || !svg) return;
 
       if (!done) {
-        gsap.set(lines, { drawSVG: 0 });
-        gsap.set(shapes, { opacity: 0 });
+        hideWolf(svg);
         return;
       }
 
-      gsap
-        .timeline({
-          onComplete: () => {
-            // Dash lengths are measured for the straight lines; once they
-            // start bending, a leftover dash pattern would cut gaps in them.
-            gsap.set(lines, { clearProps: "strokeDasharray,strokeDashoffset" });
-            field.attach([...lines, ...shapes]);
-          },
-        })
-        .fromTo(
-          lines,
-          { drawSVG: 0 },
-          {
-            drawSVG: "100%",
-            duration: LINE_DRAW_DURATION,
-            ease: "none",
-            stagger: (_index, line: Shape) => byHeight(line),
-          },
-          0,
-        )
-        .fromTo(
-          shapes,
-          { opacity: 0 },
-          {
-            opacity: 1,
-            duration: LINE_DRAW_DURATION,
-            stagger: (_index, shape: Shape) =>
-              byHeight(shape) + LINE_DRAW_DURATION / 2,
-          },
-          0,
-        );
+      const lines = gsap.utils.toArray<SVGPolylineElement>("[data-wolf-line]");
+      const shapes = gsap.utils.toArray<SVGPolygonElement>("[data-wolf-shape]");
+      drawWolfIn(svg, {
+        lineDuration: LINE_DRAW_DURATION,
+        lastLineAt: LAST_LINE_AT,
+      }).eventCallback("onComplete", () => {
+        // Dash lengths are measured for the straight lines; once they start
+        // bending, a leftover dash pattern would cut gaps in them.
+        gsap.set(lines, { clearProps: "strokeDasharray,strokeDashoffset" });
+        field.attach([...lines, ...shapes]);
+      });
 
       return () => field.detach();
     },
@@ -149,6 +116,7 @@ export function ReactiveWolf({ className }: { className?: string }) {
   return (
     <div
       ref={scope}
+      data-testid="reactive-wolf"
       aria-hidden="true"
       onPointerMove={handlePointerMove}
       onPointerDown={handlePointerDown}

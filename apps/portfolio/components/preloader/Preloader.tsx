@@ -1,8 +1,14 @@
 "use client";
 
 import { cn } from "@intromax/ui";
-import { createContext, useContext, useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { Constellation } from "./Constellation";
 
 /*
  * The loader plays for a fixed 1500ms on every navigation between pages, not
@@ -20,18 +26,6 @@ const MAX_DURATION_MS = 5000;
 
 /* How long the overlay takes to fade out once the wait is over. */
 const FADE_MS = 300;
-
-/*
- * The four folding squares, in float order: top-left, top-right,
- * bottom-left, bottom-right. Each quadrant is rotated so its fold origin
- * points at the cube's centre; the delays walk them round clockwise.
- */
-const CUBES = [
-  { rotate: "0deg", delay: "0s" },
-  { rotate: "90deg", delay: "0.3s" },
-  { rotate: "270deg", delay: "0.9s" },
-  { rotate: "180deg", delay: "0.6s" },
-];
 
 const PreloaderDoneContext = createContext(true);
 
@@ -126,36 +120,17 @@ export function Preloader({ children }: PreloaderProps) {
             aria-label="Loading"
             aria-hidden={isDone || undefined}
           >
-            <div className="relative mx-auto mt-12.5 h-18.75 w-18.75 rotate-45">
-              {CUBES.map((cube) => (
-                <div
-                  key={cube.rotate}
-                  className="relative float-left h-1/2 w-1/2"
-                  style={{ transform: `scale(1.1) rotate(${cube.rotate})` }}
-                >
-                  <div
-                    className="absolute inset-0 origin-bottom-right animate-[fold-cube_1.8s_infinite_linear_both] rounded-tl-xs bg-accent"
-                    style={{ animationDelay: cube.delay }}
-                  />
-                </div>
-              ))}
-            </div>
+            <Constellation className="size-40" />
 
             <div className="mt-16 w-[30%]">
               <p className="mb-4 animate-[preloader-label_0.5s_ease-out_forwards] text-center font-mono text-button font-thin tracking-[2px] text-foreground opacity-0 [text-shadow:0_0_2px_var(--color-accent)]">
                 Ormaks is thinking...
               </p>
               {/* #55708d: the track colour — single use, not a token. */}
-              <div className="relative isolate z-10 h-1 w-full bg-[#55708d]">
-                <div className="relative h-full w-0 animate-[progress-fill_1.3s_linear_forwards] rounded-r-1 bg-accent">
-                  {/*
-                   * The glowing tip: an accent shadow on the leading 60px,
-                   * with a background-coloured gradient laid over its left
-                   * part so only the front edge glows. Both sit behind the
-                   * bar's fill (negative z inside the isolated bar).
-                   */}
-                  <div className="absolute top-0 right-0 -z-10 h-full w-16 max-w-full rounded-r-1 shadow-[0_0_10px_var(--color-accent),0_0_10px_var(--color-accent)]" />
-                  <div className="absolute -top-2.5 right-0 z-[-5] h-[calc(100%+20px)] w-16 max-w-[calc(100%+10px)] bg-linear-to-r from-background to-transparent" />
+              <div className="h-1 w-full bg-[#55708d]">
+                <div className="relative h-full w-0 animate-[progress-fill_1.3s_linear_forwards] bg-accent">
+                  {/* The glowing tip leading the fill. */}
+                  <div className="absolute top-1/2 right-0 size-2 translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent),0_0_8px_var(--color-accent)]" />
                 </div>
               </div>
             </div>
