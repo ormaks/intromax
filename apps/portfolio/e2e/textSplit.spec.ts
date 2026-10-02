@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 /** Preloader: 1.5s minimum, up to a 5s cap on a slow first load — plus headroom. */
 const PRELOADER_TIMEOUT = 8_000;
@@ -13,7 +13,7 @@ test("a hover mid-bounce replays it once, after the current bounce ends", async 
     timeout: PRELOADER_TIMEOUT,
   });
 
-  const letter = page.locator("main h1 span span").first();
+  const letter = page.locator("main h1 [aria-hidden] > span").first();
   const box = (await letter.boundingBox())!;
   const over = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   const away = { x: over.x, y: box.y + box.height + 120 };

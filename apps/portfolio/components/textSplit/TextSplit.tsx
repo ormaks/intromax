@@ -72,14 +72,12 @@ function AnimatedUnit({ text }: { text: string }) {
  * Word-split text is inline, so several segments (and links between them)
  * flow as one paragraph; letter-split text is an inline block.
  *
- * Accessibility comes from keeping the real characters — including the spaces
- * — as the only text, so an ancestor heading computes its name from them and
- * reads normally. Two approaches that look correct do not work here: an
- * `aria-label` on the wrapper is ignored because a bare span is a generic
- * role, and pairing a visually-hidden copy with an `aria-hidden` letter
- * subtree makes Chrome announce the string twice, since it still walks the
- * hidden subtree when computing name from content. `whitespace-pre-wrap` is
- * what stops the spaces collapsing between the inline-block letters.
+ * Split letters are decoration: they sit in an `aria-hidden` wrapper, and a
+ * visually hidden copy of the whole text is what assistive tech reads, so a
+ * heading is announced as "About me" rather than letter by letter. Words in
+ * prose are read as they are, separated by real spaces.
+ * `whitespace-pre-wrap` stops the spaces collapsing between the inline-block
+ * units.
  */
 export function TextSplit({
   children,
@@ -100,27 +98,34 @@ export function TextSplit({
     );
   }
 
-  const units = byWord ? children.split(" ") : Array.from(children);
+  if (byWord) {
+    const words = children.split(" ");
+    return (
+      <span className={cn("inline whitespace-pre-wrap", className)}>
+        {words.map((word, index) => (
+          // Words repeat, so the index is the only stable key available.
+          <Fragment key={index}>
+            <AnimatedUnit text={word} />
+            {index < words.length - 1 ? " " : null}
+          </Fragment>
+        ))}
+      </span>
+    );
+  }
 
   return (
-    <span
-      className={cn(
-        "whitespace-pre-wrap",
-        byWord ? "inline" : "inline-block",
-        className,
-      )}
-    >
-      {units.map((unit, index) => (
-        // Units repeat, so the index is the only stable key available.
-        <Fragment key={index}>
-          {!byWord && unit === " " ? (
-            <span> </span>
+    <span className={cn("inline-block whitespace-pre-wrap", className)}>
+      <span aria-hidden="true">
+        {Array.from(children).map((letter, index) =>
+          // Letters repeat, so the index is the only stable key available.
+          letter === " " ? (
+            <span key={index}> </span>
           ) : (
-            <AnimatedUnit text={unit} />
-          )}
-          {byWord && index < units.length - 1 ? " " : null}
-        </Fragment>
-      ))}
+            <AnimatedUnit key={index} text={letter} />
+          ),
+        )}
+      </span>
+      <span className="sr-only">{children}</span>
     </span>
   );
 }

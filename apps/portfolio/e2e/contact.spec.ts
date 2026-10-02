@@ -1,4 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+import { expect, test } from "./fixtures";
 
 /** Preloader: 1.5s minimum, up to a 5s cap on a slow first load — plus headroom. */
 const PRELOADER_TIMEOUT = 8_000;
@@ -22,7 +24,9 @@ test.describe("desktop (1440px)", () => {
 
   test("heading, intro and form", async ({ page }) => {
     await openContact(page);
-    await expect(page.locator("main h1")).toHaveText("Contact me");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Contact me" }),
+    ).toBeVisible();
     await expect(page.getByText(/Open to new offers/)).toBeVisible();
     await expect(page.getByLabel("message")).toBeVisible();
   });

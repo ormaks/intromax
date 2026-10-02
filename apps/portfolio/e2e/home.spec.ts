@@ -1,4 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+import { expect, test } from "./fixtures";
 
 /** Preloader: 1.5s minimum, up to a 5s cap on a slow first load — plus headroom. */
 const PRELOADER_TIMEOUT = 8_000;
@@ -37,9 +39,12 @@ test("heading, subtitle and CONTACT ME", async ({ page }) => {
   await page.goto("/");
   await expect(loader(page)).toBeHidden({ timeout: PRELOADER_TIMEOUT });
 
-  await expect(page.locator("main h1")).toHaveText(
-    "Hi,I'm Maks,frontend developer.",
-  );
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Hi, I'm Maks, frontend developer.",
+    }),
+  ).toBeVisible();
   await expect(page.getByText("React / TypeScript / Next.js")).toBeVisible();
 
   await page.getByRole("link", { name: "Contact me" }).click();
