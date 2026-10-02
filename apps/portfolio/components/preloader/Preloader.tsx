@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Constellation } from "./Constellation";
+import { Constellation } from "@/components/constellation";
 
 /*
  * The loader plays for a fixed 1500ms on every navigation between pages, not

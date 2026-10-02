@@ -54,7 +54,9 @@ test("unknown path renders the custom 404 with no preloader or frame", async ({
   const response = await page.goto("/definitely-not-a-page");
   expect(response?.status()).toBe(404);
 
-  await expect(page.getByText("Page not found")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "404 - Page not found" }),
+  ).toBeVisible();
   await expect(page.getByRole("status", { name: "Loading" })).toHaveCount(0);
   await expect(page.getByText("</html>")).toHaveCount(0);
 });
