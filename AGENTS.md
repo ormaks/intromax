@@ -130,7 +130,7 @@ The portfolio runs as a Cloudflare Worker (`intromax-portfolio`, on `workers.dev
 
 `.github/workflows/ci.yml`:
 
-- **`checks`** — `nx run-many -t lint typecheck build`, then the OpenNext Worker bundle from that build (`--skipNextBuild`)
+- **`checks`** — `nx run-many -t lint typecheck`, then `opennextjs-cloudflare build`, which runs `next build` itself (OpenNext needs Next's standalone output, which a plain `next build` doesn't produce) and bundles the Worker
 - **`e2e`** — the full Playwright suite on bundled Chromium; traces uploaded on failure
 - **`deploy`** — `nx deploy portfolio`, only on a push to `main`, only after both pass
 

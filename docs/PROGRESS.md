@@ -20,7 +20,7 @@ Each entry: what shipped, key decisions made (and why), what's next.
   - `preview` and `deploy` scripts.
 - **New dev dependencies (app-local):** `@opennextjs/cloudflare` and `wrangler`. In `pnpm-workspace.yaml`, `allowBuilds` sets `esbuild` and `workerd` to `false`, because their binaries come as per-platform optional packages.
 - **`.github/workflows/ci.yml`:**
-  - `checks` runs lint, typecheck and build, then bundles the Worker from that build.
+  - `checks` runs lint and typecheck, then the OpenNext build (`next build` plus the Worker bundle).
   - `e2e` runs the full suite on bundled Chromium and uploads traces if it fails.
   - `deploy` runs only on `main`, after both pass.
   - A newer push cancels an older PR run. A started run on `main` is never cancelled.
@@ -37,7 +37,8 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 **Review fixes (`code-reviewer` pass):**
 
-- **The Worker bundle is built on every PR.** `checks` runs `opennextjs-cloudflare build --skipNextBuild` after the Next build. Without it, the first merge to `main` would have been the first time the bundle was ever built.
+- **The Worker bundle is built on every PR.** `checks` runs `opennextjs-cloudflare build`. Without it, the first merge to `main` would have been the first time the bundle was ever built.
+- **The first CI run caught a `--skipNextBuild` mistake.** OpenNext reads Next's standalone output, which only its own build turns on (`NEXT_PRIVATE_STANDALONE`), so bundling a plain `next build` failed on a missing `.next/standalone`. `checks` now lets the OpenNext build run the Next build itself, in place of Nx's `build` target.
 - **Concurrency wording** in the workflow and docs is now precise: a run on `main` is never cancelled once started, but a newer push replaces a run that is still queued.
 - **Not changed:**
   - `compatibility_date` `2026-09-30` is within the installed workerd (1.20260930).

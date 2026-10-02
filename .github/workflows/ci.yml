@@ -28,10 +28,11 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm nx run-many -t lint typecheck build
-      # Bundles the Worker from the build above, so a bundling error fails the
-      # PR instead of the deploy.
-      - run: pnpm --filter portfolio exec opennextjs-cloudflare build --skipNextBuild
+      - run: pnpm nx run-many -t lint typecheck
+      # The OpenNext build runs `next build` itself, with the standalone output
+      # the Worker bundle needs, so a build or bundling error fails the PR
+      # instead of the deploy.
+      - run: pnpm --filter portfolio exec opennextjs-cloudflare build
 
   e2e:
     name: e2e

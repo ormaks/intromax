@@ -55,7 +55,7 @@ The site is complete but has never been live. CI/CD moves ahead of the pet-proje
 - **Triggers:** `pull_request` to `main` and `push` to `main`.
 - **Concurrency per ref:** a newer push cancels older PR runs. A run on `main` is never cancelled once started, so a deploy can't be cut off. A newer push only replaces a run that is still queued.
 - **Each job:** checkout, `pnpm/action-setup` (version from `packageManager`), `setup-node` from `.nvmrc` with the pnpm cache, then `pnpm install --frozen-lockfile`.
-- **`checks`:** `nx run-many -t lint typecheck build`, then `opennextjs-cloudflare build --skipNextBuild`, so a Worker bundling error fails the PR rather than the deploy.
+- **`checks`:** `nx run-many -t lint typecheck`, then `opennextjs-cloudflare build`. It runs `next build` with the standalone output the Worker bundle needs, so a build or bundling error fails the PR rather than the deploy.
 - **`e2e`** (parallel to `checks`):
   - Installs Playwright's bundled Chromium and runs `nx e2e portfolio` with `PLAYWRIGHT_CHANNEL=""`.
   - Uploads `test-results/` (traces) on failure.
