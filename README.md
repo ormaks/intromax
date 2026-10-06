@@ -47,7 +47,7 @@ Requires Node 24 (see `.nvmrc`) and pnpm — `pnpm install`, then `pnpm nx dev p
 - [x] **Stage 2** — Architecture & design system
 - [x] **Stage 3** — Backend/storage (contact-form endpoint first)
 - [x] **Stage 4** — Legacy content/design migration
-- [ ] **Stage 5** — Cloudflare CI/CD
+- [x] **Stage 5** — Cloudflare CI/CD
 - [ ] **Stage 6** — Pet-projects section + barbershop duplicate
 - [ ] **Stage 7** — Testing & ongoing agent loop
       See `docs/PROGRESS.md` for what's actually landed vs. this plan, and `AGENTS.md` for how work in this repo is done.

@@ -8,7 +8,7 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ## Stage 5a — Cloudflare CI/CD
 
-**Status:** Done in code, pending the first CI run and deploy. Spec: `docs/specs/005a-cloudflare-deploy.md`
+**Status:** Done - live at https://intromax-portfolio.ormaks.workers.dev. Spec: `docs/specs/005a-cloudflare-deploy.md`
 
 **Roadmap reordered:** CI/CD moved up to Stage 5, so everything after it ships through a checked pipeline. Pet projects are now Stage 6, testing Stage 7.
 
@@ -44,10 +44,24 @@ Each entry: what shipped, key decisions made (and why), what's next.
   - `compatibility_date` `2026-09-30` is within the installed workerd (1.20260930).
   - Actions are pinned to major tags rather than SHAs. Secrets only reach the deploy step, and the workflow token is read-only.
 
+**Wrap-up (`fix/stage-5-wrap-up`):**
+
+- **CI annotations from the first green run:**
+  - `pnpm/action-setup` is bumped to v6, which runs on Node 24. v4 targeted the deprecated Node 20.
+  - Runners are pinned to `ubuntu-24.04` instead of `ubuntu-latest`, which moves to Ubuntu 26 on 19 October 2026. Playwright's `--with-deps` installs system packages per distro, so the runner image changes only when we choose.
+- **About plays Tycho - "A Walk"** (SoundCloud 85216615, Tycho's own upload), in place of a fan upload of Amy Winehouse's "Back to Black".
+  - You picked an instrumental with a clean title that suits the site's mood.
+  - Candidates were checked for SoundCloud's stream policy from the dev machine. Most big-label hits are blocked or play only a 30-second preview there, for example "Get Lucky", "Uptown Funk" and "Blinding Lights". Tycho's upload streams in full.
+  - The policy can differ by country. The player's "Listen on SoundCloud" fallback covers a visitor for whom the track doesn't play.
+- **Prettier leaves trailing commas out of `.jsonc`** (an override in `.prettierrc.json`). Its default adds them, which editors that validate `wrangler.jsonc` as strict JSON flag as errors.
+- README ticks Stage 5, and the spec records what CI and the live site verified.
+
 **Verification:**
 
 - Lint, typecheck and `next build` pass, and the full e2e suite passes (57/57).
-- **Not verified locally: the OpenNext bundle.** `opennextjs-cloudflare build` gets through `next build`, then fails while copying traced files with `EPERM: symlink`. Windows only lets non-admin shells create symlinks with Developer Mode on. The first Ubuntu CI run is the real check for the Worker bundle, and the first merge to `main` is the first deploy.
+- **The OpenNext bundle builds only in CI.** Locally, `opennextjs-cloudflare build` gets through `next build`, then fails while copying traced files with `EPERM: symlink`. Windows only lets non-admin shells create symlinks with Developer Mode on. `checks` builds it on Ubuntu for every PR.
+- **The live site:** every route returns 200, an unknown path returns the custom 404, and prerendered pages are served with `s-maxage=31536000`.
+- **Not verified yet:** a contact form message sent from the live site. It needs the two Worker secrets in Cloudflare.
 
 ---
 

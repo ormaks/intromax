@@ -47,8 +47,8 @@ export default function AboutPage() {
       <div className="flex flex-col items-start gap-6 desktop:flex-1 desktop:items-center">
         <ReactiveWolf />
         <MusicPlayer
-          trackId={236967116}
-          trackUrl="https://soundcloud.com/ereny_youssef/amy-winehouse-back-to-black"
+          trackId={85216615}
+          trackUrl="https://soundcloud.com/tycho/a-walk"
           className="w-full tablet:w-4/5 desktop:w-full desktop:max-w-md"
         />
       </div>

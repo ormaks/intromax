@@ -75,7 +75,7 @@ The site is complete but has never been live. CI/CD moves ahead of the pet-proje
 
 ## Acceptance criteria
 
-- [ ] `opennextjs-cloudflare build` produces `.open-next/worker.js` and `.open-next/assets`.
+- [x] `opennextjs-cloudflare build` produces `.open-next/worker.js` and `.open-next/assets`.
 - [ ] `preview` serves every route and the 404 from the Worker locally.
 - [x] `ci.yml` runs `checks` and `e2e` on PRs and pushes to `main`, and runs `deploy` only on `main` after both pass.
 - [x] A new push to a PR cancels its older run. A started run on `main` is never cancelled.
@@ -85,6 +85,9 @@ The site is complete but has never been live. CI/CD moves ahead of the pet-proje
 
 ## Deviations
 
-- **The first two criteria are unchecked: the OpenNext bundle hasn't been built locally.** `opennextjs-cloudflare build` gets through `next build`, then fails while copying traced files with `EPERM: symlink`. Windows only allows symlinks from a non-admin shell with Developer Mode on. The first Ubuntu CI run is the real check.
+- **The OpenNext bundle is built in CI only.** Locally, `opennextjs-cloudflare build` gets through `next build`, then fails while copying traced files with `EPERM: symlink`. Windows only allows symlinks from a non-admin shell with Developer Mode on. `checks` builds the bundle on Ubuntu for every PR, which covers the first criterion.
+- **`preview` was never run locally** (same symlink limit), so the second criterion stays unchecked. The deployed Worker covers it instead: every route returns 200 and an unknown path returns the custom 404 at `https://intromax-portfolio.ormaks.workers.dev`.
+- **`checks` runs the OpenNext build in place of Nx's `build` target.** OpenNext needs Next's standalone output, which only its own build turns on, so bundling a plain `next build` with `--skipNextBuild` fails.
+- **Runners are pinned to `ubuntu-24.04`, and `pnpm/action-setup` is at v6** (Node 24), instead of `ubuntu-latest` and v4.
 - **`allowBuilds`:** wrangler brings in `esbuild` and `workerd`. Both are set to `false`, because their binaries install as per-platform optional packages.
 - **ESLint and Prettier** also ignore `.wrangler/` (wrangler's local state), not only `.open-next/`.
