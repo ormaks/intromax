@@ -58,7 +58,7 @@ export function CvCard({ className }: { className?: string }) {
           {FILE_NAME}
         </p>
         <p className="m-0 text-caption text-subtle">
-          Senior Front-End Developer · 2 pages
+          Senior Frontend Developer · 2 pages
         </p>
         <div className="flex gap-4 pt-1">
           {inPage ? (
