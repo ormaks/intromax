@@ -1,6 +1,7 @@
 import { cn } from "@intromax/ui";
 import type { ReactNode } from "react";
 import { CodeTag } from "@/components/codeTag";
+import { ConstellationBackdrop } from "@/components/constellationBackdrop";
 import { Preloader } from "@/components/preloader";
 
 type PageShellProps = {
@@ -18,6 +19,12 @@ type PageShellProps = {
    * the frame, which stacks above it.
    */
   backdrop?: ReactNode;
+  /**
+   * For pages longer than one screen. On desktop the content block becomes
+   * its own scroll container between the frame tags, which stay pinned; the
+   * document itself still doesn't scroll there.
+   */
+  scroll?: boolean;
 };
 
 /* Content margins: 5% mobile, 9% tablet, 6% desktop. */
@@ -37,13 +44,17 @@ const TAG_INDENT = "ml-[5px] tablet:ml-[10px] desktop:ml-[30px]";
  *   min-height: 566px`, with the page content spaced between the two frame
  *   tags. The no-scroll rule that goes with it lives in globals.css.
  *
+ * Behind it all sits the pointer-reactive constellation backdrop.
+ *
  * Tablet and mobile are ordinary document flow and scroll normally.
+ * `scroll` lets a long page scroll inside the desktop frame.
  */
 export function PageShell({
   children,
   className,
   inset = DEFAULT_INSET,
   backdrop,
+  scroll = false,
 }: PageShellProps) {
   return (
     <Preloader>
@@ -55,13 +66,35 @@ export function PageShell({
       >
         <CodeTag name="body" indent className={TAG_INDENT} />
 
-        <div className={cn(inset, className)}>{children}</div>
+        <div
+          // A scroll container has to take focus so keyboard users can
+          // scroll it with the arrow keys, Space and Page Up/Down.
+          {...(scroll && {
+            role: "region",
+            "aria-label": "Page content",
+            tabIndex: 0,
+          })}
+          className={cn(
+            inset,
+            scroll && [
+              "desktop:focus-visible:-outline-offset-2",
+              "scroll-smooth desktop:min-h-0 desktop:flex-1 desktop:overflow-y-auto desktop:pr-[5%]",
+              "desktop:[scrollbar-color:var(--color-border)_transparent] desktop:[scrollbar-width:thin]",
+              // Text fades out at the frame's edges instead of being cut off.
+              "desktop:[mask-image:linear-gradient(to_bottom,transparent,black_32px,black_calc(100%-32px),transparent)]",
+            ],
+            className,
+          )}
+        >
+          {children}
+        </div>
 
         <div className={TAG_INDENT}>
           <CodeTag name="body" closing indent />
           <CodeTag name="html" closing />
         </div>
       </div>
+      <ConstellationBackdrop />
       {backdrop}
     </Preloader>
   );

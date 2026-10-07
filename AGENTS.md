@@ -59,7 +59,16 @@ Only the legacy site's three layouts exist — Tailwind's default `sm`/`md`/`lg`
 
 ### Page frame
 
-Every route except the 404 wraps its content in `PageShell` (`components/pageShell/`). It owns three things a page shouldn't re-implement: the per-page `Preloader` (mounted per page so it replays on every navigation, as the legacy site did — and so the 404 has none), the decorative `<body>` … `</body></html>` code-tag frame, and the desktop geometry (`top: 5%`, `height: 90%`, `min-height: 566px`). Desktop pages don't scroll — `globals.css` locks `overflow` above 1024px wide, but only on viewports at least 596px tall; shorter ones scroll rather than clip. Anything that must wait for the loader to lift (e.g. an entrance animation) reads `usePreloaderDone()`.
+Every route except the 404 wraps its content in `PageShell` (`components/pageShell/`). It owns four things a page shouldn't re-implement: the pointer-reactive constellation backdrop (`components/constellationBackdrop/`, faded in once the loader lifts), the per-page `Preloader` (mounted per page so it replays on every navigation, as the legacy site did — and so the 404 has none), the decorative `<body>` … `</body></html>` code-tag frame, and the desktop geometry (`top: 5%`, `height: 90%`, `min-height: 566px`). Desktop pages don't scroll — `globals.css` locks `overflow` above 1024px wide, but only on viewports at least 596px tall; shorter ones scroll rather than clip. Anything that must wait for the loader to lift (e.g. an entrance animation) reads `usePreloaderDone()`. A page longer than one screen (Experience) passes `scroll`: on desktop its content block becomes its own scroll container between the pinned frame tags, so the document-level lock stays as it is.
+
+### Site-wide music
+
+The SoundCloud widget lives in `MusicProvider` (`components/musicProvider/`), mounted in the root layout, so the root layout's persistence across client-side navigation keeps music playing from page to page.
+
+- Pages never own a widget. `MusicPlayer` (About) is a view that calls `useMusic()`.
+- `MiniPlayer` floats bottom-right on any page without a full player once the track has played.
+- Nothing from SoundCloud loads until a page calls `load(trackId)`.
+- A seek before the first play is held and sent once playback starts, because the widget otherwise ignores it and stops responding to play().
 
 ### App root layout
 
@@ -68,15 +77,16 @@ Every route except the 404 wraps its content in `PageShell` (`components/pageShe
 ```
 apps/portfolio/
   app/
-    layout.tsx        root layout — Next requires this exact location
+    layout.tsx        root layout — Next requires this exact location; also hosts MusicProvider + MiniPlayer
     not-found.tsx     global 404 — see note below, also root-only
     page.tsx           "/"
     about/page.tsx
     contact/page.tsx
+    experience/page.tsx  long-form case studies, linked from Skills (no nav icon)
   actions/             Server Actions ('use server'), one file per feature (contact.ts, ...)
   components/          app-local components (Header, PageShell, TextSplit, ...)
   hooks/               custom hooks, one file per hook (useMediaQuery.ts, ...)
-  constants/           shared constants, one file per topic (breakpoints.ts, ...)
+  constants/           shared constants and page content, one file per topic (breakpoints.ts, experience.ts, ...)
   types/               types for third-party APIs without their own (soundcloud.ts, ...)
   e2e/                 Playwright smoke tests
   styles/              globals.css, fonts.ts

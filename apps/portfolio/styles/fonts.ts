@@ -1,4 +1,4 @@
-import { Open_Sans } from "next/font/google";
+import { Inter, Open_Sans } from "next/font/google";
 import localFont from "next/font/local";
 
 /*
@@ -45,8 +45,20 @@ export const sans = Open_Sans({
   display: "swap",
 });
 
+/**
+ * Inter — long-form reading text (the Experience page). Not preloaded: no
+ * other page uses it.
+ */
+export const reading = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  preload: false,
+});
+
 export const fontVariables = [
   heading.variable,
   tag.variable,
   sans.variable,
+  reading.variable,
 ].join(" ");

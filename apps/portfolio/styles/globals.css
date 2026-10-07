@@ -195,3 +195,70 @@ body {
     width: 100%;
   }
 }
+
+/*
+ * A boxless call to action: its underline draws in from the left, holds, and
+ * fades, while its arrow nudges toward the destination.
+ */
+@keyframes underline-draw {
+  0% {
+    width: 0;
+    opacity: 1;
+  }
+  60% {
+    width: 100%;
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes arrow-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(8px);
+  }
+}
+
+/*
+ * Dashed strokes that slowly travel along their path: the connectors in the
+ * Experience page's diagrams. The offset matches one dash period (4 + 12), so
+ * the loop is seamless.
+ */
+@keyframes trace-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+/* The mini player's sound-wave: each bar rises and falls on its own offset. */
+@keyframes sound-wave {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/*
+ * Long-form reading text: Inter at 15px, 16px from tablet up, for pages where
+ * the monospace prose would tire the eye.
+ */
+@utility reading-text {
+  font-family: var(--font-reading), sans-serif;
+  font-size: var(--text-reading-sm);
+  line-height: var(--text-reading-sm--line-height);
+  color: var(--color-foreground);
+
+  @variant tablet {
+    font-size: var(--text-reading);
+    line-height: var(--text-reading--line-height);
+  }
+}

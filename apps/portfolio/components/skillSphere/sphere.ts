@@ -41,6 +41,8 @@ const PERSPECTIVE = 2.6;
 /* The sphere's radius as a share of the box's shorter side. */
 const RADIUS_SHARE = 0.38;
 const LIT_SCALE = 1.3;
+/** Words behind this depth (0 back, 1 front) ignore the pointer. */
+const REACHABLE_DEPTH = 0.5;
 /* A pulse's trip along one link, and the gap before the next hop sets off. */
 const PULSE_SECONDS = 0.45;
 const HOP_DELAY_SECONDS = 0.3;
@@ -95,6 +97,8 @@ type Node = {
   dim: number;
   /** A brief brightening when a pulse arrives, fading to 0. */
   flash: number;
+  /** On the far side: hover and clicks pass through it. */
+  hidden: boolean;
 };
 
 type Edge = {
@@ -270,6 +274,7 @@ export function createSphere(
             near: 0,
             dim: 0,
             flash: 0,
+            hidden: false,
           },
         ]
       : [];
@@ -385,6 +390,14 @@ export function createSphere(
       style.transform = `translate3d(${node.x}px, ${node.y}px, 0) translate(-50%, -50%) scale(${scale})`;
       style.opacity = opacity.toFixed(3);
       style.zIndex = String(Math.round(node.depth * 100));
+
+      // Only words on the near side can be hovered or clicked; the pointer
+      // passes through the far side to the sphere column behind it.
+      const hidden = node.depth < REACHABLE_DEPTH;
+      if (hidden !== node.hidden) {
+        node.hidden = hidden;
+        style.pointerEvents = hidden ? "none" : "";
+      }
     }
   };
 
