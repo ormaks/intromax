@@ -56,6 +56,8 @@
   --font-sans: var(--font-open-sans), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-millunium), ui-sans-serif, sans-serif;
   --font-tag: var(--font-la-belle-aurore), cursive;
+  /* Long-form reading text, where the monospace prose would tire the eye. */
+  --font-reading: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /*
    * Type scale: headings 56px, tag text 18px, small text 11-13px. Headings step down on
@@ -67,6 +69,11 @@
   --text-heading--line-height: 0.95; /* 53px on 56px */
   --text-heading-sm: 2.1875rem; /* 35px, the mobile (<=480px) step */
   --text-heading-sm--line-height: 0.86; /* 30px on 35px */
+  /* Section headings inside a long page: 32px, 26px on mobile. */
+  --text-heading-md: 2rem; /* 32px */
+  --text-heading-md--line-height: 1.1;
+  --text-heading-md-sm: 1.625rem; /* 26px */
+  --text-heading-md-sm--line-height: 1.1;
 
   --tracking-button: 0.1875em; /* 3px at button size */
   --text-button: 0.8125rem; /* 13px */
@@ -114,6 +121,12 @@
   --text-prose-lg: 1rem; /* 16px */
   --text-prose-lg--line-height: 1.1875rem; /* 19px */
   --text-prose-lg--letter-spacing: 1px;
+
+  /* Reading text: 16px/1.65, 15px on mobile. */
+  --text-reading: 1rem; /* 16px */
+  --text-reading--line-height: 1.65;
+  --text-reading-sm: 0.9375rem; /* 15px */
+  --text-reading-sm--line-height: 1.6;
 
   /*
    * Breakpoints: the site's three layouts and nothing else. Tailwind's

@@ -5,6 +5,7 @@ const PAGES = [
   { path: "/about", heading: "About me" },
   { path: "/skills", heading: "Skills & Experience" },
   { path: "/contact", heading: "Contact me" },
+  { path: "/experience", heading: "Experience" },
 ] as const;
 
 /** Preloader: 1.5s minimum, up to a 5s cap on a slow first load — plus headroom. */
@@ -28,8 +29,18 @@ test.describe("pages", () => {
       await expect(
         browserPage.getByRole("heading", { level: 1, name: page.heading }),
       ).toBeVisible();
+
+      // The constellation backdrop sits behind every framed page.
+      const backdrop = browserPage.getByTestId("constellation-backdrop");
+      await expect(backdrop).toHaveAttribute("aria-hidden", "true");
+      await expect(backdrop).toHaveCSS("opacity", "1");
     });
   }
+
+  test("the 404 has no constellation backdrop", async ({ page }) => {
+    await page.goto("/no-such-page");
+    await expect(page.getByTestId("constellation-backdrop")).toHaveCount(0);
+  });
 });
 
 test("code-tag frame is decorative", async ({ page }) => {

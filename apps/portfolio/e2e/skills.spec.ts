@@ -203,6 +203,24 @@ test.describe("desktop (1440px)", () => {
     await expect.poll(() => wordTravel(page, 300)).toBeGreaterThan(3);
   });
 
+  test("words on the far side of the sphere ignore the pointer", async ({
+    page,
+  }) => {
+    await openSkills(page);
+    // Drawn order follows depth: the lowest z-index is the furthest back.
+    const pointerEvents = () =>
+      page.evaluate(() => {
+        const items = Array.from(
+          document.querySelectorAll<HTMLElement>('[aria-label="Skills"] li'),
+        ).sort((a, b) => Number(a.style.zIndex) - Number(b.style.zIndex));
+        return {
+          back: getComputedStyle(items[0]!).pointerEvents,
+          front: getComputedStyle(items.at(-1)!).pointerEvents,
+        };
+      });
+    await expect.poll(pointerEvents).toEqual({ back: "none", front: "auto" });
+  });
+
   test("the pointer steers over the sphere column, not the text", async ({
     page,
   }) => {
@@ -238,6 +256,25 @@ test.describe("desktop (1440px)", () => {
     await expect(contact).not.toHaveAttribute("target", "_blank");
     await contact.click();
     await expect(page).toHaveURL(/\/contact$/);
+  });
+
+  test("the experience link animates and opens the Experience page", async ({
+    page,
+  }) => {
+    await openSkills(page);
+    const link = page.getByRole("link", {
+      name: "See more about my experience",
+    });
+    expect(
+      await link.evaluate(
+        (el) => getComputedStyle(el, "::after").animationName,
+      ),
+    ).toBe("underline-draw");
+    expect(
+      await link.evaluate((el) => getComputedStyle(el).borderTopWidth),
+    ).toBe("0px");
+    await link.click();
+    await expect(page).toHaveURL(/\/experience$/);
   });
 });
 

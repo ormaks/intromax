@@ -58,6 +58,41 @@ test.describe("desktop (1440px)", () => {
     );
   });
 
+  test("a seek before the first play is kept and still plays", async ({
+    page,
+  }) => {
+    await openAbout(page);
+    const slider = page.getByRole("slider", { name: "Seek" });
+    await expect(slider).toBeVisible();
+    const box = (await slider.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(slider).toHaveAttribute("aria-valuenow", "100");
+
+    await page.getByRole("button", { name: "Play" }).click();
+    await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
+    // Played first, then sought: the widget never sees an early seek.
+    expect(await calls(page)).toEqual(["volume:70", "play", "seek:100000"]);
+  });
+
+  test("the volume slider sets the widget's volume", async ({ page }) => {
+    await openAbout(page);
+    const volume = page.getByRole("slider", { name: "Volume" });
+    // Starts at 70%, set on the widget once it's ready.
+    await expect(volume).toHaveAttribute("aria-valuenow", "70");
+    expect(await calls(page)).toContain("volume:70");
+    await volume.press("Home");
+    for (let step = 0; step < 8; step++) await volume.press("ArrowUp");
+    await expect(volume).toHaveAttribute("aria-valuenow", "40");
+    expect(await calls(page)).toContain("volume:40");
+
+    // Clicking the line sets the volume where it lands.
+    const box = (await volume.boundingBox())!;
+    await page.mouse.click(box.x + box.width - 1, box.y + box.height / 2);
+    await expect
+      .poll(async () => Number(await volume.getAttribute("aria-valuenow")))
+      .toBeGreaterThan(90);
+  });
+
   test("the wolf bends away from the pointer and springs back", async ({
     page,
   }) => {

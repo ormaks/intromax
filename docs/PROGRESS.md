@@ -6,6 +6,136 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Stage 6 — Wrap-up
+
+**Status:** Done. Stage 6 shipped in one branch (6a): the Experience page, plus three site-wide additions that came out of it:
+
+- the constellation backdrop
+- music that keeps playing across pages
+- the reworked Skills call to action and sphere
+
+**Carried forward:**
+
+- Animations still ignore `prefers-reduced-motion` (the site-wide decision).
+- The mini player can cover the bottom-right corner of a page on phones.
+- The site plays one track.
+- No NVDA/VoiceOver pass yet, as at the end of Stage 4.
+
+**Next:** Stage 7 — pet-projects section + barbershop duplicate.
+
+---
+
+## Stage 6a — Experience page
+
+**Status:** Done - spec: `docs/specs/006a-experience.md`
+
+**Roadmap reordered:** the Experience page became Stage 6, pet projects Stage 7, and testing Stage 8.
+
+**Shipped — the Experience page:**
+
+- **`/experience`:** long-form case studies of past work, linked from Skills, with no nav icon.
+  - An intro from the CV, beside a "What I bring" column.
+  - Four case studies: WorkJam, Esko, the design-led real-estate sites, and early projects (Benamix, Sol-Ra, M-Pluse).
+  - Jump links, a career timeline with education, and a closing link to Contact.
+  - All copy is typed data in `constants/experience.ts`.
+- **`components/caseStudy/`:**
+  - The section has a `section` code tag, an `h2`, `h3` subheadings and bulleted lists.
+  - On desktop it's two columns: the text on the left (capped at 52rem), and key facts and stack chips on the right. Below desktop it stacks facts, text, then stack.
+- **`components/diagram/`:** inline-SVG sketches in the site's thin-line style, with flowing dashed connectors. Each is `role="img"` with a label.
+  - **The WorkJam platform:** browser, Microsoft Teams and the mobile apps, the monorepo, the separate chat app and its own server, and the APIs and Gemini.
+  - **The chat bridge.**
+  - Below its minimum width, a diagram scrolls sideways in a focusable region instead of shrinking its text.
+- **`PageShell` `scroll`:**
+  - On desktop the content block scrolls between the pinned frame tags as a focusable "Page content" region.
+  - The edges fade and the scrollbar is thin.
+  - The document-level lock stays as it is.
+- **Reading text:**
+  - Inter (`next/font/google`, not preloaded) through the `reading-text` utility in `globals.css`.
+  - Theme tokens: `--font-reading`, `text-reading` and `text-reading-sm`, and `text-heading-md` and `text-heading-md-sm` for section headings.
+
+**Shipped — across the site:**
+
+- **`components/constellationBackdrop/`, mounted by `PageShell`:** a dim canvas constellation on every framed page. The 404 has its own scene and no backdrop.
+  - Stars drift and link to their neighbours, and to the mouse when it comes near.
+  - It runs on GSAP's ticker and stays still until the preloader lifts.
+  - At most 140 stars, at up to 2× resolution.
+  - A resize rescales the stars rather than reshuffling them.
+- **Skills:**
+  - **Link:** a boxless "See more about my experience" link under the category chips, 14px (16px from tablet).
+    - Its underline keeps drawing itself in (`underline-draw`), and its arrow nudges (`arrow-nudge`).
+    - On hover or focus the underline settles in full, both glow, and the arrow hurries.
+    - The page still fits at 1280×600.
+  - **Sphere:** words on its far half ignore the pointer, so only the front-facing words light up or pulse.
+- **Music across the site:**
+  - **`components/musicProvider/`:**
+    - Owns the one hidden SoundCloud widget from the root layout, so music keeps playing through client-side navigation.
+    - SoundCloud loads only once a page calls `load()`.
+    - Volume starts at 70%.
+  - **About's player:** now a view over `useMusic()`, with a volume slider. Seek and volume share the thin glowing `LineSlider`.
+  - **Seeking before the first play works:**
+    - A seek sent before the track has ever played leaves SoundCloud's widget stuck, so the provider holds it and sends it once playback starts.
+    - The e2e stub mimics that quirk.
+  - **`components/miniPlayer/`:**
+    - Floats bottom-right on pages without the full player, once the track has played.
+    - It has a sound-wave, the title linking back to About, play/pause, and close (pause and hide until the next play).
+
+**Decisions:**
+
+- **Content came from an interview with you:**
+  - Company and client names (WorkJam, Esko) are shown. Real-estate site names and links, screenshots, logos and per-project dates are not.
+  - Case-study roles use the general "Frontend Developer".
+  - The chat isn't named, and is described at a high level because of the NDA. Teams is mentioned in general terms only.
+  - Each case study is presented as the highlights, alongside many other features.
+  - A colleague's site was a source of shared facts that you confirmed, never of wording.
+  - The copy grew about 50% over the first approved version, which is kept as "exp1".
+- **Scroll inside the frame, not the document.** The single-screen desktop design and its global lock stay intact.
+- **Inter over the monospace prose:** long text reads at 16px/1.65 instead of 12px mono. Headings and code tags keep the site's look.
+- **Picked from playable previews:**
+  - **Skills link:** the underline-and-arrow variant, over orbit, typing, light sweep and mini-constellation.
+  - **Backdrop:** the pointer-reactive constellation, darkened for reading, then extended to every page.
+- **Music across pages through the root layout,** because App Router keeps it mounted during client navigation. The widget never remounts, and nothing per page is hardcoded.
+- **Shared class sets go in a Tailwind `@utility`,** never in a style-only constants file.
+
+**Review fixes (three `code-reviewer` passes):**
+
+- **Experience page:**
+  - The desktop scroll region and the scrollable diagrams take keyboard focus.
+  - Jump links land below the top fade.
+  - Diagram labels stay legible on phones, and captions sit off their connector lines.
+  - The e2e scroll container is found by its role.
+- **Backdrop:**
+  - It keeps its stars across resizes, such as a mobile URL bar showing or hiding.
+  - The star count and canvas resolution are capped, and the per-frame loop uses indexes rather than array copies.
+  - It stays still until the preloader lifts.
+  - Stars clamp at the edges, and the pointer resets on window blur.
+- **Music:**
+  - The drag flag clears when pointer capture is lost or the player unmounts.
+  - The widget's listeners are unbound if their effect re-runs (React's development double-invoke).
+  - The mini player's close button is 32px.
+
+**Not changed (deliberately):**
+
+- New animations ignore `prefers-reduced-motion`, following the site-wide decision.
+- Focus falls back to the page when the mini player closes.
+- On phones the mini player can cover the bottom-right corner of the content.
+- One track only: the first track loaded stays for the session.
+
+**Verification:**
+
+- Lint, typecheck, build (every route static) and Prettier pass. The full e2e suite passes (75/75). New and extended specs:
+  - **`experience.spec.ts`:** structure, scrolling inside the frame, keyboard scrolling, jump links, Inter, the backdrop's pointer links, the contact link, and mobile.
+  - **`music.spec.ts`:** SoundCloud stays unloaded on Home, music keeps playing across pages, and the mini player pauses, closes and links back to About.
+  - **About:** the early seek and the volume slider.
+  - **Skills:** the link and the sphere's far side.
+  - **Shell:** the backdrop on every framed page and none on the 404.
+- **In the browser:**
+  - The page at 1440×900 and 375px: pinned frame tags, jump links, no horizontal overflow.
+  - Skills at 1280×600.
+  - Against the real SoundCloud widget: playing on About, moving to Skills, the mini player showing "A Walk", and pausing from it.
+- **Not watched live:** the backdrop's motion in the browser pane, which wasn't running animation frames this session. The e2e pixel test covers the pointer links.
+
+---
+
 ## Stage 5a — Cloudflare CI/CD
 
 **Status:** Done - live at https://intromax-portfolio.ormaks.workers.dev. Spec: `docs/specs/005a-cloudflare-deploy.md`

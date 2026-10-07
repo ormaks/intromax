@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { cn, ToastHost } from "@intromax/ui";
 import { Header } from "@/components/header";
+import { MiniPlayer } from "@/components/miniPlayer";
+import { MusicProvider } from "@/components/musicProvider";
 import { fontVariables } from "@/styles/fonts";
 import "@/styles/globals.css";
 
@@ -38,13 +40,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
 
-        <Header />
-        <main
-          id="main"
-          className="relative flex-1 pt-(--height-header) desktop:pt-0 desktop:pl-(--width-header)"
-        >
-          {children}
-        </main>
+        {/* Music lives above the routes, so it keeps playing across
+            client-side navigation. */}
+        <MusicProvider>
+          <Header />
+          <main
+            id="main"
+            className="relative flex-1 pt-(--height-header) desktop:pt-0 desktop:pl-(--width-header)"
+          >
+            {children}
+          </main>
+          <MiniPlayer />
+        </MusicProvider>
       </body>
     </html>
   );

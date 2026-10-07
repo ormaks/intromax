@@ -26,6 +26,8 @@ export type SoundCloudWidget = {
   pause(): void;
   /** Milliseconds. */
   seekTo(position: number): void;
+  /** 0-100. */
+  setVolume(volume: number): void;
   getCurrentSound(callback: (sound: SoundCloudSound | null) => void): void;
 };
 

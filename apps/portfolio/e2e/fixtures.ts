@@ -9,6 +9,9 @@ const FAKE_TRACK_MS = 200_000;
  * A stand-in for SoundCloud's Widget API: reports ready shortly after being
  * bound, emits play/pause/progress like the real one, and records every call
  * on `window.scCalls` so tests can assert what the player asked for.
+ *
+ * Like the real widget, a seek sent before the track has ever played leaves
+ * it stuck: later play() calls do nothing.
  */
 const FAKE_WIDGET_API = `
   window.scCalls = [];
@@ -18,13 +21,16 @@ const FAKE_WIDGET_API = `
     // Like the real API: messaging a detached frame throws.
     const post = () => { if (!iframe.isConnected) throw new TypeError("Cannot read properties of null (reading 'postMessage')"); };
     const emit = (event, data) => handlers[event] && handlers[event](data);
+    let started = false;
+    let stuck = false;
     setTimeout(() => emit("ready"), 50);
     return {
       bind: (event, fn) => { handlers[event] = fn; },
       unbind: (event) => { post(); delete handlers[event]; },
-      play: () => { scCalls.push("play"); emit("play"); emit("playProgress", { currentPosition: 1000, relativePosition: 0.005 }); },
+      play: () => { if (stuck) { scCalls.push("play-ignored"); return; } started = true; scCalls.push("play"); emit("play"); emit("playProgress", { currentPosition: 1000, relativePosition: 0.005 }); },
       pause: () => { post(); scCalls.push("pause"); emit("pause"); },
-      seekTo: (ms) => { scCalls.push("seek:" + Math.round(ms)); },
+      seekTo: (ms) => { if (!started) stuck = true; scCalls.push("seek:" + Math.round(ms)); },
+      setVolume: (value) => { scCalls.push("volume:" + Math.round(value)); },
       getCurrentSound: (cb) => cb(window.scNoSound ? null : { title: "Test Track", duration: ${FAKE_TRACK_MS}, permalink_url: "https://soundcloud.com/test", user: { username: "Test Artist" } }),
     };
   }
