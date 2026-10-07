@@ -6,28 +6,9 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
-## Stage 6 — Wrap-up
+## Stage 6 — Experience page
 
-**Status:** Done. Stage 6 shipped in one branch (6a): the Experience page, plus three site-wide additions that came out of it:
-
-- the constellation backdrop
-- music that keeps playing across pages
-- the reworked Skills call to action and sphere
-
-**Carried forward:**
-
-- Animations still ignore `prefers-reduced-motion` (the site-wide decision).
-- The mini player can cover the bottom-right corner of a page on phones.
-- The site plays one track.
-- No NVDA/VoiceOver pass yet, as at the end of Stage 4.
-
-**Next:** Stage 7 — pet-projects section + barbershop duplicate.
-
----
-
-## Stage 6a — Experience page
-
-**Status:** Done - spec: `docs/specs/006a-experience.md`
+**Status:** Done - spec: `docs/specs/006-experience.md`. Shipped in one PR: the Experience page, plus three site-wide additions that came out of it (the constellation backdrop, music across pages, and the reworked Skills call to action and sphere).
 
 **Roadmap reordered:** the Experience page became Stage 6, pet projects Stage 7, and testing Stage 8.
 
@@ -66,6 +47,7 @@ Each entry: what shipped, key decisions made (and why), what's next.
     - On hover or focus the underline settles in full, both glow, and the arrow hurries.
     - The page still fits at 1280×600.
   - **Sphere:** words on its far half ignore the pointer, so only the front-facing words light up or pulse.
+- **CV:** `public/cv/` holds the new two-page text CV, "Senior Frontend Developer (React/TypeScript)". The page-1 thumbnail is re-rendered at 120×170 with pdf.js in a scratch script, and the card's subtitle reads "Senior Frontend Developer · 2 pages". The PDF metadata is clean: title, author and keywords, and no editor IDs.
 - **Music across the site:**
   - **`components/musicProvider/`:**
     - Owns the one hidden SoundCloud widget from the root layout, so music keeps playing through client-side navigation.
@@ -133,6 +115,15 @@ Each entry: what shipped, key decisions made (and why), what's next.
   - Skills at 1280×600.
   - Against the real SoundCloud widget: playing on About, moving to Skills, the mini player showing "A Walk", and pausing from it.
 - **Not watched live:** the backdrop's motion in the browser pane, which wasn't running animation frames this session. The e2e pixel test covers the pointer links.
+
+**Carried forward:**
+
+- Animations still ignore `prefers-reduced-motion` (the site-wide decision).
+- The mini player can cover the bottom-right corner of a page on phones.
+- The site plays one track.
+- No NVDA/VoiceOver pass yet, as at the end of Stage 4.
+
+**Next:** Stage 7 — pet-projects section + barbershop duplicate.
 
 ---
 

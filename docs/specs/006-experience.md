@@ -1,4 +1,4 @@
-# Spec: Stage 6a — Experience page
+# Spec: Stage 6 — Experience page
 
 ## What
 
