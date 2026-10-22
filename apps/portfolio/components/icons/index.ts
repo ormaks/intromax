@@ -1,6 +1,7 @@
 export {
   EnvelopeIcon,
   FacebookIcon,
+  FlaskIcon,
   GearIcon,
   GithubIcon,
   HomeIcon,

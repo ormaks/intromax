@@ -107,6 +107,14 @@ test.describe("desktop (1440px)", () => {
     await expect(active).toHaveAttribute("aria-current", "page");
   });
 
+  test("the lab item is marked on /lab", async ({ page }) => {
+    await page.goto("/lab");
+    await expect(nav(page).getByRole("link", { name: /lab/i })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
   test("hovering a nav item widens it into a tab", async ({ page }) => {
     await page.goto("/skills");
     const home = nav(page).getByRole("link", { name: /home/i });
@@ -120,7 +128,7 @@ test.describe("desktop (1440px)", () => {
 
 test("every nav and social link has an accessible name", async ({ page }) => {
   await page.goto("/");
-  for (const name of [/home/i, /about/i, /skills/i, /contact/i]) {
+  for (const name of [/home/i, /about/i, /skills/i, /lab/i, /contact/i]) {
     await expect(nav(page).getByRole("link", { name })).toHaveCount(1);
   }
   for (const name of ["Facebook", "Instagram", "Telegram"]) {

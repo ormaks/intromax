@@ -83,6 +83,7 @@ apps/portfolio/
     about/page.tsx
     contact/page.tsx
     experience/page.tsx  long-form case studies, linked from Skills (no nav icon)
+    lab/page.tsx         pet projects (coming soon) and the runner game
   actions/             Server Actions ('use server'), one file per feature (contact.ts, ...)
   components/          app-local components (Header, PageShell, TextSplit, ...)
   hooks/               custom hooks, one file per hook (useMediaQuery.ts, ...)

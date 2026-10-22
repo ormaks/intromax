@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   EnvelopeIcon,
   FacebookIcon,
+  FlaskIcon,
   GearIcon,
   HomeIcon,
   InstagramIcon,
@@ -30,6 +31,7 @@ const NAV_ITEMS: Item[] = [
   { href: "/", label: "home", Icon: HomeIcon },
   { href: "/about", label: "about", Icon: UserIcon },
   { href: "/skills", label: "skills", Icon: GearIcon },
+  { href: "/lab", label: "lab", Icon: FlaskIcon },
   { href: "/contact", label: "contact", Icon: EnvelopeIcon },
 ];
 

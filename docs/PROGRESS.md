@@ -6,6 +6,35 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Stage 7 — Lab page
+
+**Status:** Implemented, awaiting review - spec: `docs/specs/007-lab.md`. The barbershop rebuild planned for this stage is deferred; Stage 7 is the Lab page alone.
+
+**Shipped:**
+
+- **`/lab`:**
+  - A flask "lab" item in the header nav, between skills and contact.
+  - The page says the Lab is coming soon and what it's for, then invites the visitor to beat the owner's record.
+  - One centred column: the text, then the game.
+  - Before the first run only the dino shows, with a pulsing "Press Space or click to play" prompt (a real button). Starting a game opens the field out to full width.
+- **`components/runnerGame/`:** an endless runner, a teal pixel dino jumping code-themed obstacles (`{}`, `</>`, a bug, and from 300 points a flying `;`).
+  - `engine.ts` holds the DOM-free state and physics in a fixed 600×150 world.
+  - `sprites.ts` holds our own pixel bitmaps.
+  - `RunnerGame.tsx` draws on the GSAP ticker using the backdrop's canvas patterns. It waits for the preloader and pauses on blur.
+  - **Controls:** Space, ArrowUp or a tap. Keys aren't taken from links, buttons or form fields.
+- **`hooks/useBestScore.ts`:** the visitor's best score in `localStorage` (`intromax:lab-best`), through `useSyncExternalStore`. It's guarded against storage errors, with an in-memory fallback, and synced across tabs.
+- **`constants/lab.ts`:** `OWNER_RECORD`, the score shown as "My record".
+
+**Decisions:**
+
+- **Our own small engine** instead of porting Chromium's runner. It's typed, has no dependency, has no sprite licensing question, and is easy to restyle.
+- **No duck:** every flier is either jumped or run under, so touch and keyboard play the same.
+- **Scores are DOM text** under the canvas, so screen readers and tests can read them. The canvas itself is `role="img"` with a label that describes the controls.
+
+**Next:** Stage 8 — testing & ongoing agent loop.
+
+---
+
 ## Stage 6 — Experience page
 
 **Status:** Done - spec: `docs/specs/006-experience.md`. Shipped in one PR: the Experience page, plus three site-wide additions that came out of it (the constellation backdrop, music across pages, and the reworked Skills call to action and sphere).
