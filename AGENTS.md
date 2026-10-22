@@ -171,7 +171,16 @@ Any failure aborts the commit. Don't bypass it with `--no-verify`; fix the cause
 
 ## Workflow rules
 
-- **Branching**: one branch per **feature**, always off `main`. A feature is a coherent unit of work that lands as a single PR — it can hold many commits. Naming: `stage/NN-short-name` for roadmap-stage work (e.g. `stage/01-nx-workspace-scaffolding`), `feat/short-name` or `fix/short-name` for everything after Stage 1. Never commit directly to `main` — everything lands as a PR.
+- **Branching**: one branch per **feature**, always off `main`. A feature is a coherent unit of work that lands as a single PR — it can hold many commits. Naming: `stage/NN-short-name` for roadmap-stage work (e.g. `stage/01-nx-workspace-scaffolding`), `feat/short-name` or `fix/short-name` for everything after Stage 1. Never commit or push directly to `main` — everything lands as a PR, reviewed before merge.
+- **Creating a branch**: start from an up-to-date local `main`, never from `origin/main` — a branch cut from a remote-tracking ref tracks it, and a plain `git push` then lands in `main`:
+
+  ```bash
+  git switch main && git pull --ff-only && git switch -c feat/short-name
+  git push -u origin feat/short-name   # first push: the branch tracks itself
+  ```
+
+  The Husky `pre-push` hook refuses any push whose target is `main`, and GitHub's ruleset on `main` requires a PR.
+
 - **Stay on the branch.** Follow-up tweaks, review fixes, renames and doc updates that belong to the feature in flight go on that same branch, as further commits. Don't spin up a new branch and a second PR for every adjustment. Cut a new branch only when the work is genuinely unrelated to what's already on the current one — and if that's a judgment call, ask rather than guessing.
 - **Stop before git.** Implementing a change never includes committing it. See [Review and handoff](#review-and-handoff) — the agent's work ends with a dirty working tree and a summary, not a commit.
 - **Small changes** (styling tweaks, copy edits, config bumps, obvious bug fixes): just do it directly. No spec needed.

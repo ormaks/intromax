@@ -1,0 +1,11 @@
+# main only changes through a reviewed PR. Refuse any push whose target on
+# the remote is main, whichever local branch it comes from — a feature branch
+# tracking origin/main would otherwise push straight into it.
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "pre-push: pushing to main is not allowed - push your branch and open a PR." >&2
+    echo "  Current branch upstream: $(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo none)" >&2
+    echo "  Fix: git push -u origin \$(git branch --show-current)" >&2
+    exit 1
+  fi
+done
