@@ -47,8 +47,8 @@ export default function AboutPage() {
       <div className="flex flex-col items-start gap-6 desktop:flex-1 desktop:items-center">
         <ReactiveWolf />
         <MusicPlayer
-          trackId={85216615}
-          trackUrl="https://soundcloud.com/tycho/a-walk"
+          trackId={328351977}
+          trackUrl="https://soundcloud.com/defectedrecords/camelphat-elderbrook-cola-2"
           className="w-full tablet:w-4/5 desktop:w-full desktop:max-w-md"
         />
       </div>

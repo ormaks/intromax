@@ -25,6 +25,11 @@ Each entry: what shipped, key decisions made (and why), what's next.
 - **`hooks/useBestScore.ts`:** the visitor's best score in `localStorage` (`intromax:lab-best`), through `useSyncExternalStore`. It's guarded against storage errors, with an in-memory fallback, and synced across tabs.
 - **`constants/lab.ts`:** `OWNER_RECORD`, the score shown as "My record".
 
+**Also changed:**
+
+- **About plays CamelPhat & Elderbrook - "Cola"** (SoundCloud 328351977, Defected Records' upload), in place of Tycho's "A Walk". HOSH's "Tighter (feat. Jalja)" was the first pick, but its stream policy is `BLOCK` from the dev machine's region. "Cola" was chosen from similar vocal melodic-house tracks whose SoundCloud policy is `ALLOW` there.
+- **The Skills nav icon is an outline gear.** Font Awesome's outline gear is Pro-only, so it's Lucide's `settings` icon (ISC), stroked to sit with the regular-weight Font Awesome icons.
+
 **Decisions:**
 
 - **Our own small engine** instead of porting Chromium's runner. It's typed, has no dependency, has no sprite licensing question, and is easy to restyle.
