@@ -6,6 +6,56 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ---
 
+## Barbershop track
+
+The barbershop booking app is a pet project with a real backend, built as its own track (B1, B2, ...) alongside the portfolio stages. The umbrella spec is `docs/specs/barbershop.md`. Each B-stage is one PR, on a `feat/barbershop-bN-short-name` branch.
+
+| Stage | Name                  | Delivers                                                                                                                    | Status                   |
+| ----- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| B1    | Spec                  | `docs/specs/barbershop.md` and this breakdown                                                                               | Written, awaiting review |
+| B2    | Data model            | API app skeleton, Docker Postgres, Drizzle schema and migrations (exclusion constraint included), seed, DB constraint tests | Planned                  |
+| B3    | Public API            | Fastify server, `modules/barbershop-contracts`, public endpoints, slot generation, rate limits, integration tests           | Planned                  |
+| B4    | Auth                  | argon2id passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                  | Planned                  |
+| B5    | Admin API             | Admin bookings, services, barbers and hours, the overview, analytics                                                        | Planned                  |
+| B6    | Frontend: public site | `apps/barbershop`: landing, booking flow, lookup and cancel, `/api` proxy, e2e smoke tests                                  | Planned                  |
+| B7    | Frontend: admin       | Admin login, overview, bookings table, services and barbers CRUD, hours editor, charts                                      | Planned                  |
+| B8    | Deploy                | Neon, the API on Railway, Render or Fly, the frontend Worker on Cloudflare, CI for both apps                                | Planned                  |
+
+### B1 — Spec
+
+**Status:** Written, awaiting review - spec: `docs/specs/barbershop.md`. Docs only, no code.
+
+**Decided:**
+
+- **The stack:**
+  - **Fastify** for the API: a plain Node server with built-in schemas and first-class TypeScript.
+  - **Neon** for production Postgres, and Docker locally.
+  - **The API host** is a long-running Node process on Railway, Render or Fly. The provider is picked in B8.
+  - **A separate barbershop track**, so the portfolio roadmap keeps its numbering. Stage 8 is still testing and the agent loop.
+  - **Vitest** for tests. The B2 dependencies are approved: `drizzle-orm`, `drizzle-kit`, `pg`, `@types/pg`, `tsx`, `vitest`.
+  - **Docker Desktop** (on WSL2) runs local Postgres. It isn't installed yet and has to be in place before B2 starts.
+- **The data model:**
+  - Bookings are `tstzrange` `[start, end)` with a partial exclusion constraint: `btree_gist`, barber `=`, range `&&`, cancelled rows ignored. Double-booking is impossible at the database level.
+  - Price and duration are snapshotted on the booking, and a check ties the range length to the duration.
+  - Working and opening hours are local `time` per weekday, turned into instants in the shop timezone, which is stored in `shop_settings`.
+  - Opening hours bound barber hours: the API rejects barber hours outside them on save. The seed widens the old opening hours (Mon 09-19, Tue-Sat 08-19, Sun 08-17) so the old barbers' schedules fit.
+  - Money is integer cents.
+  - Barbers and services deactivate. A hard delete is blocked by `ON DELETE RESTRICT` once bookings reference them.
+- **Guests** use a short Crockford-base32 reference + phone, rate-limited. Lookup and cancel are POST, so phone numbers stay out of URLs.
+- **Auth:**
+  - The only role is admin, created by a CLI script.
+  - Server-side sessions store a SHA-256 hash of the token, with an `HttpOnly` `SameSite=Lax` cookie and sliding 30-day expiry.
+  - The frontend proxies `/api/*`, so the cookie is first-party.
+- **Designed for later, not built:**
+  - the `user_role` enum, with only `admin` used
+  - the nullable `bookings.user_id`
+
+**Open:** 9 questions in the spec, each assigned to the stage that needs the answer.
+
+**Next:** B2 — data model.
+
+---
+
 ## Stage 7 — Lab page
 
 **Status:** Implemented, awaiting review - spec: `docs/specs/007-lab.md`. The barbershop rebuild planned for this stage is deferred; Stage 7 is the Lab page alone.
