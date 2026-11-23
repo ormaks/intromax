@@ -10,20 +10,54 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 The barbershop booking app is a pet project with a real backend, built as its own track (B1, B2, ...) alongside the portfolio stages. The umbrella spec is `docs/specs/barbershop.md`. Each B-stage is one PR, on a `feat/barbershop-bN-short-name` branch.
 
-| Stage | Name                  | Delivers                                                                                                                    | Status                   |
-| ----- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| B1    | Spec                  | `docs/specs/barbershop.md` and this breakdown                                                                               | Written, awaiting review |
-| B2    | Data model            | API app skeleton, Docker Postgres, Drizzle schema and migrations (exclusion constraint included), seed, DB constraint tests | Planned                  |
-| B3    | Public API            | Fastify server, `modules/barbershop-contracts`, public endpoints, slot generation, rate limits, integration tests           | Planned                  |
-| B4    | Auth                  | argon2id passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                  | Planned                  |
-| B5    | Admin API             | Admin bookings, services, barbers and hours, the overview, analytics                                                        | Planned                  |
-| B6    | Frontend: public site | `apps/barbershop`: landing, booking flow, lookup and cancel, `/api` proxy, e2e smoke tests                                  | Planned                  |
-| B7    | Frontend: admin       | Admin login, overview, bookings table, services and barbers CRUD, hours editor, charts                                      | Planned                  |
-| B8    | Deploy                | Neon, the API on Railway, Render or Fly, the frontend Worker on Cloudflare, CI for both apps                                | Planned                  |
+| Stage | Name                  | Delivers                                                                                                                    | Status                       |
+| ----- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| B1    | Spec                  | `docs/specs/barbershop.md` and this breakdown                                                                               | Done                         |
+| B2    | Data model            | API app skeleton, Docker Postgres, Drizzle schema and migrations (exclusion constraint included), seed, DB constraint tests | Implemented, awaiting review |
+| B3    | Public API            | Fastify server, `modules/barbershop-contracts`, public endpoints, slot generation, rate limits, integration tests           | Planned                      |
+| B4    | Auth                  | argon2id passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                  | Planned                      |
+| B5    | Admin API             | Admin bookings, services, barbers and hours, the overview, analytics                                                        | Planned                      |
+| B6    | Frontend: public site | `apps/barbershop`: landing, booking flow, lookup and cancel, `/api` proxy, e2e smoke tests                                  | Planned                      |
+| B7    | Frontend: admin       | Admin login, overview, bookings table, services and barbers CRUD, hours editor, charts                                      | Planned                      |
+| B8    | Deploy                | Neon, the API on Railway, Render or Fly, the frontend Worker on Cloudflare, CI for both apps                                | Planned                      |
+
+### B2 — Data model
+
+**Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`. No HTTP server yet.
+
+**Shipped:**
+
+- **`apps/barbershop-api`:** a plain Node + TypeScript project with Nx targets `lint`, `typecheck`, `test`, `db:up`, `db:down`, `db:generate`, `db:migrate` and `db:seed`.
+- **`compose.yaml`:** Postgres 17 in Docker on host port 5433, with a named volume and a healthcheck, so `up --wait` returns only once it accepts connections.
+- **`src/db/schema.ts`:** all eight tables from the spec, with their enums, checks, foreign keys and indexes.
+- **`src/db/tstzrange.ts`:** a custom Drizzle column type. The app sees `{ start, end }`, and the database stores a `[start, end)` range.
+- **Migrations in `drizzle/`:**
+  - `0000_init` is generated from the schema.
+  - `0001_bookings_no_overlap` is hand-written: `btree_gist` and the exclusion constraint.
+- **`src/schedule/openingHours.ts`:** `weekdaysOutsideOpeningHours`, the "barber hours inside opening hours" check. The seed uses it now; the B5 hours endpoint will reuse it.
+- **`src/db/seed.ts`:** the shop, its opening hours, and a demo catalogue of 8 services and 3 barbers. Safe to run again.
+- **Tests (Vitest), 13 in all:**
+  - the range parser
+  - the opening-hours check
+  - the overlap rule against the real database: an overlap is rejected with `23P01`, back-to-back is allowed, another barber is allowed, and cancelling frees the slot
+
+**Decisions:**
+
+- **Host port 5433.** This machine also runs a native PostgreSQL 18 service on 5432. The first attempt connected to it and failed authentication.
+- **DB tests roll back instead of using a test database.** There's one less database to create and migrate. The cost is that the dev database must be running and migrated.
+- **The seed never overwrites the catalogue.** Demo rows go only into empty tables, because bookings reference services and barbers.
+- **`src/` in non-Next apps.** AGENTS.md now limits "no `src/`" to Next apps.
+- **Only needed tests,** as a standing rule in AGENTS.md.
+
+**Not done here:** tests in CI. CI for this app is a deploy-config change, planned for B8.
+
+**Next:** B3 — public API.
+
+---
 
 ### B1 — Spec
 
-**Status:** Written, awaiting review - spec: `docs/specs/barbershop.md`. Docs only, no code.
+**Status:** Done - merged. Spec: `docs/specs/barbershop.md`. Docs only, no code.
 
 **Decided:**
 

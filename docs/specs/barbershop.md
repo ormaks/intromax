@@ -390,7 +390,8 @@ Matches the old app's data, so the rebuilt site looks the same out of the box:
   - David Williams: Tue-Sun 08-17, break 12-13.
 
   The old app's opening hours (Mon-Fri 09-19, Sat 10-17, Sunday closed) contradicted these barbers in three places: David starts at 08:00, works Sundays, and Marcus works until 19:00 on Saturdays. Since opening hours now bound barber hours, the seed widens the opening hours instead of cutting the barbers' days.
-  - The seed script inserts through the same validation the API uses, so an inconsistent seed fails loudly.
+  - The seed script (`db:seed`) checks every barber's hours with the same function the API uses (`weekdaysOutsideOpeningHours`) before writing anything, so an inconsistent seed fails loudly.
+  - It's safe to run again. The shop row and opening hours are always rewritten, because nothing references them. The demo services and barbers go in only while both tables are empty, so the admin's own rows, and the bookings pointing at them, are never touched.
 
 ## Slot generation
 
@@ -497,10 +498,10 @@ Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That ke
 
 **Database workflow:**
 
-- **Local Postgres** runs in Docker (`docker compose`, a Postgres 17 image) from the API app.
+- **Local Postgres** runs in Docker (`compose.yaml` in the API app, a Postgres 17 image) on host port 5433, so it doesn't collide with a Postgres installed on the machine itself.
 - **Drizzle** defines the tables in TypeScript.
 - **`drizzle-kit generate`** writes SQL migration files, which are committed and reviewed like code.
-- **What Drizzle's schema language can't express** goes in a hand-written custom migration in the same folder: `btree_gist`, the exclusion constraint, and the `tstzrange` checks.
+- **What Drizzle's schema language can't express** goes in a hand-written custom migration in the same folder: `btree_gist` and the exclusion constraint. The checks on `during` are plain `CHECK`s, so they stay in `schema.ts`. `tstzrange` itself is a small custom column type (`src/db/tstzrange.ts`).
 - **The driver** is `pg` (node-postgres), with a connection pool.
 
 **Testing:**
@@ -508,6 +509,8 @@ Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That ke
 - Pure logic (slot generation, reference codes, phone normalisation) gets unit tests.
 - The API gets integration tests through Fastify's `inject()`, which makes HTTP requests without opening a port, against a real Postgres test database.
 - The first test proves that two overlapping bookings are rejected **by the database**.
+- **Database tests** run against `DATABASE_URL`, and each one runs in a transaction that is always rolled back. That's why they don't need a separate test database, and why they leave the dev data untouched. The local database must be up and migrated first.
+- **Only the tests a change needs**, not exhaustive coverage.
 - **Vitest** runs the tests. Its API is Jest-like and it runs TypeScript out of the box, and the same tool can test the Next app later.
 
 **Environment variables** (called out per AGENTS.md; each one lands in `.env.example` in its stage):
