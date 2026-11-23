@@ -1,0 +1,27 @@
+# Local Postgres for development. Start it with `pnpm nx db:up barbershop-api`.
+# The data lives in the named volume, so it survives `db:down` and restarts;
+# `docker compose down -v` deletes it for a clean slate.
+name: intromax-barbershop
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: barbershop
+      POSTGRES_PASSWORD: barbershop
+      POSTGRES_DB: barbershop
+    # Host port 5433, so it doesn't collide with a Postgres installed on the
+    # machine itself, which usually holds 5432.
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # `up --wait` blocks until this passes, so the next command can connect.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barbershop -d barbershop"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  postgres-data:

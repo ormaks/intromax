@@ -15,6 +15,7 @@ Conventions for any AI agent (Claude Code, etc.) working in this repo.
 
 - `apps/portfolio` — main site
 - `apps/<pet-project-name>` — each pet project is its own app
+- `apps/barbershop-api` — the barbershop booking app's Node API (Postgres + Drizzle; spec: `docs/specs/barbershop.md`)
 - `modules/common` — shared utils, types, hooks, and common dependencies consumed by every app
 - `modules/ui` — shared design-system components used across apps
 - `modules/config` — shared eslint/tsconfig/tailwind config (manual, not Nx-generated — kept explicit and easy to reason about), consumed through subpath exports:
@@ -35,7 +36,7 @@ Versions shared across projects (`react`, `react-dom`, `typescript`, `eslint`, t
 
 Shared code lives in `modules/`, not the conventional `packages/` — the npm scope is still `@intromax/*`, only the directory name differs. If a tool defaults to `packages/`, configure it rather than renaming the directory back.
 
-**Apps keep `app/` at the app root — no `src/` directory.** Modules do use `src/`. This asymmetry is deliberate, not an oversight: `app/` is Next's App Router directory, and apps have few enough root-level files that another nesting level buys nothing. Don't "fix" it.
+**Next apps keep `app/` at the app root — no `src/` directory.** Everything else (modules, and non-Next apps such as `apps/barbershop-api`) puts its code in `src/`. This asymmetry is deliberate, not an oversight: `app/` is Next's App Router directory, and Next apps have few enough root-level files that another nesting level buys nothing. Don't "fix" it.
 
 ### Component layout
 
@@ -125,7 +126,8 @@ Route implementations live directly in each route's `page.tsx`, not behind a re-
 - `pnpm nx build <app>` — production build
 - `pnpm nx lint <app>` — lint
 - `pnpm nx typecheck <app>` — typecheck
-- `pnpm nx test <app>` — unit tests (if/when added)
+- `pnpm nx test <app>` — Vitest unit tests, where an app has them (barbershop-api). Write the tests a change actually needs, not exhaustive ones.
+- `pnpm nx db:up barbershop-api` / `db:down` — the local Postgres in Docker (host port 5433); `db:generate` writes a migration from `src/db/schema.ts`, `db:migrate` applies pending ones. Needs `apps/barbershop-api/.env` (copy `.env.example`).
 - `pnpm nx e2e <app>` — Playwright e2e (portfolio: smoke tests in `apps/portfolio/e2e/`, run against a production build on port 3100, using the locally installed Chrome — set `PLAYWRIGHT_CHANNEL=""` to use Playwright's bundled Chromium instead). Specs import `test`/`expect` from `e2e/fixtures.ts`, not `@playwright/test`. Its automatic fixture stubs SoundCloud on every page, so no test hits the network for the music player.
 - `pnpm nx run-many -t lint typecheck` — every project at once
 - `pnpm nx preview portfolio` — OpenNext build, then the Worker locally in `wrangler dev` (reads `.env.local`, like `next dev`). The OpenNext build creates symlinks, so on Windows it needs Developer Mode or an elevated shell.
