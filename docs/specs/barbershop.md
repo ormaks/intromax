@@ -122,7 +122,7 @@ shop_settings (single row)      opening_hours (one row per open weekday)
 - **`timestamptz` is an instant, `time` is a wall-clock reading.**
   - `timestamptz` stores an exact moment, normalised to UTC. "This booking starts at 14:00 New York time on 3 March" is an instant, so bookings use it.
   - "James works 09:00-18:00 on Mondays" isn't an instant. It means 09:00 local time every Monday, before and after daylight saving changes. So schedules use plain `time` and the shop's timezone. The API turns "date + local time + timezone" into an instant only when it needs one, which happens in slot generation.
-  - Postgres does that conversion correctly across DST with `(date + time) AT TIME ZONE 'America/New_York'`.
+  - The API does that conversion with `@date-fns/tz`, which applies the UTC offset in force on that date, so DST days come out right.
 - **Integer cents, not decimals or floats.** `0.1 + 0.2 !== 0.3` in JavaScript. A `numeric` column comes back from the driver as a string, to avoid exactly that problem. Integer cents (`2500` = $25.00) are exact, sum correctly, and arrive as plain JS numbers. Formatting to `$25.00` happens only at the edge, in the UI.
 - **Constraints live in the database, not only the API.** The API validates everything first, to give friendly errors. But the database is the last line of defence: it holds even if there's a bug in the API, a second API instance, a seed script, or a hand-written SQL fix. The rules that can be stated about a single row, or about rows of the same table, are written as DB constraints. Rules that need other tables, such as "inside working hours", stay in the API.
 
@@ -398,12 +398,12 @@ Matches the old app's data, so the rebuilt site looks the same out of the box:
 `GET /v1/availability?serviceId&barberId&date=YYYY-MM-DD` (the date is in shop local time):
 
 1. **Load** the service (its duration), the barber's row in `barber_working_hours` for that weekday, and the shop timezone. If there's no row, the barber isn't working that day: return `[]`.
-2. **Build candidate start times** every 15 minutes from `starts_at`. Keep a candidate only if `start + duration <= ends_at`, so the whole service fits before closing.
+2. **Build candidate start times** every 15 minutes from `starts_at`, rounded up to the grid (:00, :15, :30, :45). Keep a candidate only if `start + duration <= ends_at`, so the whole service fits before closing.
 3. **Drop** any candidate whose `[start, start + duration)` overlaps the break.
 4. **Turn the remaining local times into instants** in the shop timezone, then drop any candidate that overlaps an existing non-cancelled booking. One query fetches the barber's bookings for that day, using the GiST index. Also drop any start that has already passed, or that is beyond the booking horizon.
 5. **Return the free starts** as ISO instants, plus a local `HH:mm` label for display.
 
-Steps 2-4 are a pure function, `(hours, break, bookings, duration, now) → slots`, which is easy to unit-test without a database. The response is a hint, not a promise: the exclusion constraint is the final word when the booking is created. Where the timezone conversion happens (SQL `AT TIME ZONE` vs a JS library) is decided in B3.
+Steps 2-4 are a pure function, `(hours, break, bookings, duration, now) → slots`, which is easy to unit-test without a database. The response is a hint, not a promise: the exclusion constraint is the final word when the booking is created. The timezone conversion happens inside that function, with `@date-fns/tz`, so a DST day is a plain unit test.
 
 ## API
 
@@ -494,7 +494,7 @@ Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That ke
   - It's a separate module rather than part of `modules/common`, because only these two apps use it, and the portfolio shouldn't carry it.
   - Like the other modules, it exports TypeScript source.
   - The Next app compiles it through `transpilePackages`.
-  - The API runs from source with `tsx` in development and is bundled with esbuild (or tsup) for production, which inlines the module. The exact tool is decided in B3.
+  - The API runs from source with `tsx` in development and tests. For production it will be bundled (esbuild or similar), which inlines the module. The tool is chosen in B8, when the API first deploys.
 
 **Database workflow:**
 
@@ -518,13 +518,15 @@ Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That ke
 | Name              | App            | Purpose                                                         | Introduced |
 | ----------------- | -------------- | --------------------------------------------------------------- | ---------- |
 | `DATABASE_URL`    | barbershop-api | Postgres connection string (Docker locally, Neon in production) | B2         |
+| `PORT`            | barbershop-api | The port the API listens on. Optional, defaults to 3001         | B3a        |
 | `FRONTEND_ORIGIN` | barbershop-api | The allowed `Origin` for state-changing requests                | B4         |
 | `API_URL`         | barbershop     | Where the Next app forwards `/api/*`                            | B6         |
 
 **New dependencies, flagged now and confirmed in their stage:**
 
 - **B2 (approved):** `drizzle-orm`, `drizzle-kit`, `pg`, `@types/pg`, `tsx`, `vitest`. Docker Desktop (on WSL2) becomes a local prerequisite for running the database.
-- **B3:** `fastify`, `zod`, `fastify-type-provider-zod`, `@fastify/rate-limit`.
+- **B3a (approved):** `fastify`, `zod` (in the pnpm catalog, shared by the contracts module and the API), `fastify-type-provider-zod`, `@date-fns/tz`.
+- **B3b:** `@fastify/rate-limit`.
 - **B4:** `@fastify/cookie` and an argon2 binding.
 - **B6:** a chart library, for the admin analytics.
 - **External services:** Neon and one API host. Docker is a new local tool.
@@ -537,7 +539,8 @@ Barbershop track, each stage one PR, each explained step by step:
 | ----- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | B1    | Spec                  | This document, plus the track in PROGRESS. No code.                                                                                                                                            |
 | B2    | Data model            | The `apps/barbershop-api` skeleton (no HTTP yet), Docker Postgres, Drizzle schema and migrations including the exclusion constraint, the seed script, and tests that prove the DB constraints. |
-| B3    | Public API            | The Fastify server, `modules/barbershop-contracts`, the public endpoints, slot generation, error mapping (`23P01` → 409), rate limits, and integration tests.                                  |
+| B3a   | Public reads          | The Fastify server, `modules/barbershop-contracts`, the error format, `/health`, shop, services, barbers, availability with slot generation, and integration tests.                            |
+| B3b   | Guest bookings        | Create, look up and cancel a booking, error mapping (`23P01` → 409), rate limits, and integration tests.                                                                                       |
 | B4    | Auth                  | `users`/`sessions` in use, argon2id, login/logout/me, the `create-admin` CLI, the admin guard, the Origin check, and tests.                                                                    |
 | B5    | Admin API             | Admin bookings, services, barbers and hours, the overview and analytics, and tests.                                                                                                            |
 | B6    | Frontend: public site | The `apps/barbershop` Next app: the landing page, booking flow, lookup and cancel, the `/api` proxy, and e2e smoke tests.                                                                      |
@@ -590,9 +593,9 @@ Designed for, not built:
 
 1. **Opening hours vs barber hours: decided.** The API rejects barber hours outside opening hours when they're saved, and the seed's opening hours are widened to cover the barbers. See [`opening_hours`](#opening_hours) and [Seed data](#seed-data).
 
-2. **The booking horizon and lead time.** Proposed: bookable up to 60 days ahead, and no later than 1 hour before the start. Should these be constants, or `shop_settings` columns?
-3. **The guest cancel cutoff.** Can a guest cancel right up to the start, or only, say, more than 2 hours before?
-4. **Phone normalisation.** Proposed: strip everything except digits and a leading `+`, with no country validation. The alternative is `libphonenumber-js`, which is a dependency but gives proper validation and formatting. Decide in B3.
+2. **The booking horizon and lead time: decided.** Bookable up to 60 days ahead and at least 1 hour before the start. Code constants in `src/schedule/slots.ts`; making them admin-editable `shop_settings` columns is a later change.
+3. **The guest cancel cutoff: decided.** A guest can cancel online until 2 hours before the start (a constant, used in B3b).
+4. **Phone normalisation: decided.** Keep a leading `+` and the digits, and require 7-15 digits; no country validation and no dependency. The schema is `phone` in the contracts module.
 5. **Admin edits outside working hours.** When the admin moves a booking, should the API enforce working hours and the grid, or allow an override? Overlap is blocked by the DB either way. Proposed: enforce by default, with an explicit `force` flag.
 6. **Hours changed under existing bookings.** When a barber's new hours leave future bookings outside them, proposed: save anyway and return those bookings so the admin can deal with them. Should it block instead?
 7. **Deactivating a barber with future bookings.** Allow it, and list the bookings in the response? Or require them to be cancelled or moved first?

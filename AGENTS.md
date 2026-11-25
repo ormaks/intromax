@@ -15,9 +15,10 @@ Conventions for any AI agent (Claude Code, etc.) working in this repo.
 
 - `apps/portfolio` — main site
 - `apps/<pet-project-name>` — each pet project is its own app
-- `apps/barbershop-api` — the barbershop booking app's Node API (Postgres + Drizzle; spec: `docs/specs/barbershop.md`)
+- `apps/barbershop-api` — the barbershop booking app's Node API (Fastify + Postgres + Drizzle; spec: `docs/specs/barbershop.md`, how the code works: its `README.md`)
 - `modules/common` — shared utils, types, hooks, and common dependencies consumed by every app
 - `modules/ui` — shared design-system components used across apps
+- `modules/barbershop-contracts` — zod request/response schemas shared by `apps/barbershop-api` and its frontend; a separate module because only those two apps use it
 - `modules/config` — shared eslint/tsconfig/tailwind config (manual, not Nx-generated — kept explicit and easy to reason about), consumed through subpath exports:
   - `@intromax/config/tsconfig/{base,react,next}.json` — `base` for plain TS, `react` adds DOM + JSX, `next` adds the Next plugin
   - `@intromax/config/eslint/{base,react,next}` — flat configs. `react` and `next` each compose `base`; `next` does **not** compose `react`, because `eslint-config-next` already registers the react-hooks plugin and flat config rejects a duplicate plugin key. Use `react` for shared React modules, `next` for apps.
@@ -122,7 +123,7 @@ Route implementations live directly in each route's `page.tsx`, not behind a re-
 ## Commands
 
 - `pnpm install` — install deps at the workspace root
-- `pnpm nx dev <app>` — run an app locally
+- `pnpm nx dev <app>` — run an app locally (`barbershop-api`: the API on port 3001, restarting on change; needs `db:up` first)
 - `pnpm nx build <app>` — production build
 - `pnpm nx lint <app>` — lint
 - `pnpm nx typecheck <app>` — typecheck

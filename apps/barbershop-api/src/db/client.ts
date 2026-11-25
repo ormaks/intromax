@@ -1,4 +1,4 @@
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
 
@@ -12,4 +12,5 @@ export function createDb(url: string) {
   return { db: drizzle(pool, { schema }), pool };
 }
 
-export type Db = ReturnType<typeof createDb>["db"];
+/** Any Drizzle database with this schema: pool-backed, or one connection. */
+export type Db = NodePgDatabase<typeof schema>;

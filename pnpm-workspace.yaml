@@ -18,6 +18,9 @@ catalog:
   react: 19.2.8
   react-dom: 19.2.8
   typescript: ^5
+  # Request and response schemas are shared by the barbershop API and its
+  # frontend; one zod copy keeps their types and runtime checks identical.
+  zod: ^4.6.7
 
 # sharp/unrs-resolver hoisted from the create-next-app output: neither native
 # build is needed here. Next 16 only reaches for sharp when self-hosting image
