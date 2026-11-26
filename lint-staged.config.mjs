@@ -3,10 +3,16 @@ import path from "node:path";
 /*
  * Runs on `git commit` (via .husky/pre-commit), against staged files only.
  *
- * ESLint can't run once from the repo root: every project has its own
- * eslint.config.mjs, and ESLint uses the config of the directory it runs in.
- * So staged files are grouped by project (`apps/<name>`, `modules/<name>`)
- * and ESLint runs once per project, from that project's directory.
+ * Every project has its own eslint.config.mjs and its own ESLint. Staged
+ * files are grouped by project (`apps/<name>`, `modules/<name>`), and each
+ * group is linted by that project's ESLint, started with `node` from the
+ * repo root. The v10_config_lookup_from_file flag makes ESLint take each
+ * file's config from the nearest eslint.config.mjs above it, instead of from
+ * the directory it runs in.
+ *
+ * Nothing here goes through pnpm: a pnpm command waits for pnpm's
+ * version-switch lock at startup, and a pnpm stuck elsewhere on the machine
+ * would stall every commit behind it.
  *
  * Order matters: ESLint --fix first, Prettier last, so Prettier has the final
  * say on formatting. lint-staged re-stages whatever the fixes changed.
@@ -34,7 +40,7 @@ function eslintPerProject(files) {
 
   return [...byProject].map(
     ([project, projectFiles]) =>
-      `pnpm --dir ${project} exec eslint --fix ${projectFiles.map(quote).join(" ")}`,
+      `node ${quote(`${project}/node_modules/eslint/bin/eslint.js`)} --flag v10_config_lookup_from_file --fix ${projectFiles.map(quote).join(" ")}`,
   );
 }
 

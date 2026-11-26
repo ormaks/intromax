@@ -167,8 +167,12 @@ Prettier owns formatting (`.prettierrc.json` — defaults, plus `endOfLine: "aut
 
 Husky installs a pre-commit hook on `pnpm install` (the root `prepare` script). On every `git commit` it runs:
 
-1. **lint-staged** (`lint-staged.config.mjs`) on staged files only — ESLint `--fix` per project (each project has its own flat config, so files are grouped by `apps/<name>` / `modules/<name>` and linted from that directory), then Prettier. Fixes are re-staged automatically.
+1. **lint-staged** (`lint-staged.config.mjs`) on staged files only — ESLint `--fix` per project (each project has its own flat config and its own ESLint, so files are grouped by `apps/<name>` / `modules/<name>`, and each group is linted by that project's ESLint with `--flag v10_config_lookup_from_file`, which takes each file's config from its own project), then Prettier. Fixes are re-staged automatically.
 2. **`nx affected -t typecheck --uncommitted`** — typechecks every project the pending changes touch, including dependents (a `modules/ui` change also checks the apps). Nx-cached.
+
+The hook calls these tools directly (Husky puts `node_modules/.bin` on `PATH`), not through `pnpm exec`, so a commit never waits on pnpm's startup.
+
+**Keep the global pnpm at the version in `packageManager`.** When they differ, every pnpm command first switches to the pinned version, and that switch can stall for minutes; Nx runs each target's script through `pnpm run`, so a commit stalls with it. If commits or `pnpm` commands hang, compare `pnpm --version` with `packageManager` in the root `package.json`, and align them with `pnpm self-update <version>`.
 
 Any failure aborts the commit. Don't bypass it with `--no-verify`; fix the cause. e2e stays out of the hook (too slow) — run it before handing off, as above.
 
