@@ -50,7 +50,8 @@ export const users = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     email: text("email").notNull(),
-    // argon2id PHC string: algorithm, cost settings, salt and hash in one.
+    // scrypt PHC string: algorithm, cost settings, salt and hash in one
+    // (see src/auth/password.ts).
     passwordHash: text("password_hash").notNull(),
     name: text("name").notNull(),
     role: userRole("role").notNull(),

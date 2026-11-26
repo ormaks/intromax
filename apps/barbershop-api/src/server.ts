@@ -1,12 +1,19 @@
 import { buildApp } from "./app";
 import { createDb } from "./db/client";
-import { loadEnv, requireEnv } from "./env";
+import { loadEnv, optionalOrigin, requireEnv } from "./env";
 
 loadEnv();
 const port = Number(process.env.PORT ?? 3001);
 const { db, pool } = createDb(requireEnv("DATABASE_URL"));
 
-const app = buildApp({ db }, { logger: true });
+const app = buildApp(
+  {
+    db,
+    frontendOrigin: optionalOrigin("FRONTEND_ORIGIN"),
+    proxySecret: process.env.PROXY_SECRET || undefined,
+  },
+  { logger: true },
+);
 
 // Stop taking requests, let in-flight ones finish, then close the database
 // connections, so a restart or deploy never cuts a request off halfway.

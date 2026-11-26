@@ -15,16 +15,47 @@ The barbershop booking app is a pet project with a real backend, built as its ow
 | B1    | Spec                  | `docs/specs/barbershop.md` and this breakdown                                                                               | Done                         |
 | B2    | Data model            | API app skeleton, Docker Postgres, Drizzle schema and migrations (exclusion constraint included), seed, DB constraint tests | Done                         |
 | B3a   | Public reads          | Fastify server, `modules/barbershop-contracts`, error format, health, shop, services, barbers, availability (slots)         | Done                         |
-| B3b   | Guest bookings        | Create, look up and cancel a booking, `23P01` → 409, rate limits                                                            | Implemented, awaiting review |
-| B4    | Auth                  | argon2id passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                  | Planned                      |
+| B3b   | Guest bookings        | Create, look up and cancel a booking, `23P01` → 409, rate limits                                                            | Done                         |
+| B4    | Auth                  | scrypt passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                    | Implemented, awaiting review |
 | B5    | Admin API             | Admin bookings, services, barbers and hours, the overview, analytics                                                        | Planned                      |
 | B6    | Frontend: public site | `apps/barbershop`: landing, booking flow, lookup and cancel, `/api` proxy, e2e smoke tests                                  | Planned                      |
 | B7    | Frontend: admin       | Admin login, overview, bookings table, services and barbers CRUD, hours editor, charts                                      | Planned                      |
 | B8    | Deploy                | Neon, the API on Railway, Render or Fly, the frontend Worker on Cloudflare, CI for both apps                                | Planned                      |
 
-### B3b — Guest bookings
+### B4 — Auth
 
 **Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`.
+
+**Shipped:**
+
+- **Passwords** (`src/auth/password.ts`): Node's built-in `crypto.scrypt` with OWASP's parameters (N = 2^17, r = 8, p = 1, about 128 MiB, ~0.4 s per hash here), a random salt, stored as a PHC string that records its own parameters; compared with `timingSafeEqual`.
+- **Sessions** (`src/auth/sessions.ts`): a 32-byte random token in the cookie, only its SHA-256 in `sessions`; 30 days, sliding once less than half is left; expired rows deleted on use; logout deletes the row.
+- **`create-admin`** (`src/scripts/createAdmin.ts`, Nx target): email, name and a hidden, repeated password of 12+ characters; a duplicate email in any letter case gets a clear message. Works typed or piped.
+- **Routes:** `POST /v1/auth/login` (one 401 `invalid_credentials` for both wrong parts, a dummy-hash check for unknown emails so timing reveals nothing, 5 per 15 minutes per IP), `POST /v1/auth/logout` (204), `GET /v1/auth/me`.
+- **Cookie:** `session`, `HttpOnly; Secure; SameSite=Lax; Path=/`, expiring with the session.
+- **`requireAdmin`** (`src/http/auth.ts`): a preHandler for B5's admin routes; 401 without a valid session, sets `request.user`, refreshes the cookie when the session slides.
+- **Origin check:** a POST/PUT/PATCH/DELETE whose `Origin` isn't `FRONTEND_ORIGIN` gets 403 `forbidden_origin`.
+- **Client IP** (`src/http/clientIp.ts`): every rate limit keys on it; `X-Forwarded-For` is believed only with the proxy's `X-Proxy-Secret`.
+- **Tests, 69 in all:** hashing, sessions (hash-only storage, expiry, sliding, expired ones cleared on login), admin creation, login/me/logout, same 401 for both wrong parts, the 6th login, forged vs proxied `X-Forwarded-For`, foreign Origin.
+
+**Decisions:**
+
+- **scrypt, not argon2id:** no native dependency; OWASP's listed alternative.
+- **Login limit 5 per 15 minutes.**
+- **A shared secret, not an IP allow-list, for trusting the proxy:** the proxy runs on Cloudflare's shared address ranges.
+- **Requests without `Origin` pass the Origin check:** they aren't from a browser, so there is no browser cookie to abuse.
+- **The dummy hash is made when the module loads,** not on first use: the manual run showed the first unknown-email login taking 0.92 s against 0.58 s for a wrong password.
+- **New env vars:** `FRONTEND_ORIGIN` (defaults to `http://localhost:3000`) and `PROXY_SECRET` (optional), both in `.env.example`; production values in B8.
+
+**Not done here:** `PROXY_SECRET` is optional, and without it every request behind the `/api` proxy shares the proxy's IP, so five bad logins from anyone would lock the admin out for 15 minutes. B6 (the proxy) and B8 (production config) must set it on both sides.
+
+**Next:** B5 — admin API.
+
+---
+
+### B3b — Guest bookings
+
+**Status:** Done - merged.
 
 **Shipped:**
 

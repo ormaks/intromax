@@ -51,6 +51,24 @@ export async function addTuesdayBarber(db: Db) {
   return ids;
 }
 
+/**
+ * An admin user. The password hash is a placeholder: tests that log in hash
+ * a real password themselves.
+ */
+export async function addAdmin(db: Db, passwordHash = "unused") {
+  const [user] = await db
+    .insert(schema.users)
+    .values({
+      email: `admin-${++referenceCounter}@example.com`,
+      name: "Test Admin",
+      role: "admin",
+      passwordHash,
+    })
+    .returning();
+  if (!user) throw new Error("Fixture insert returned nothing");
+  return user;
+}
+
 /** A confirmed guest booking. Await it, or chain `.returning()` first. */
 export function book(
   db: Db,

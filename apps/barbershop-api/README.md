@@ -27,6 +27,7 @@ curl localhost:3001/v1/barbers
 | `db:up` / `db:down`          | Start / stop the Postgres container (data survives in a named volume)           |
 | `db:generate` / `db:migrate` | Write a migration from `src/db/schema.ts` / apply pending migrations            |
 | `db:seed`                    | Fill the shop and a demo catalogue; safe to re-run (never overwrites catalogue) |
+| `create-admin`               | Create an admin account; asks for email, name and a hidden password             |
 
 ## How it fits together
 
@@ -56,9 +57,13 @@ src/
   server.ts         the entry point: env, DB pool, listen on PORT, graceful shutdown
   env.ts            loadEnv() / requireEnv()
   http/errors.ts    the error envelope, error handler, 404 handler, HttpError
+  http/auth.ts      session cookie, requireAdmin, the Origin check
+  http/clientIp.ts  the client IP for rate limits (proxy-aware)
   routes/           one Fastify plugin per area: health, shop, catalogue,
                     availability, bookings; lookups.ts holds their shared reads
+  auth/             password hashing (scrypt), sessions, creating admins
   bookings/         reference codes, the guest lookup query, the response view
+  scripts/          create-admin and its terminal prompts
   schedule/         pure time logic: clock helpers, opening-hours check, freeSlots
   db/
     schema.ts       all tables, checks, enums (source for generated migrations)
@@ -136,6 +141,35 @@ A guest then reaches the booking with `{ reference, phone }` in a POST body (nev
 
 **Rate limits** are per IP, in memory, opted into per route with `config.rateLimit`: booking 10 per hour, lookup and cancel 10 per minute each.
 
+## Auth
+
+One role, `admin`, created only by `create-admin`; there is no sign-up.
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant A as API
+  participant PG as Postgres
+
+  B->>A: POST /v1/auth/login { email, password }
+  A->>PG: user by lower(email)
+  A->>A: scrypt-verify (a dummy hash if no such user)
+  alt wrong email or password
+    A-->>B: 401 invalid_credentials
+  end
+  A->>PG: INSERT session id = sha256(token), expires in 30 days
+  A-->>B: 200 user + Set-Cookie session=token (HttpOnly, Secure, SameSite=Lax)
+  B->>A: GET /v1/auth/me (cookie)
+  A->>PG: session by sha256(token), with its user
+  Note over A: expired: delete, 401. Under 15 days left: extend, re-set cookie
+  A-->>B: 200 user
+```
+
+- **Only the token's hash is stored,** so a leaked `sessions` table can't be turned into working cookies. A token is 32 random bytes, so a fast SHA-256 is enough; passwords are guessable, so they get the slow scrypt.
+- **`requireAdmin`** (`http/auth.ts`) is the preHandler admin routes use. It sets `request.user`.
+- **CSRF:** `SameSite=Lax` keeps the cookie off cross-site POSTs, and every POST/PUT/PATCH/DELETE whose `Origin` isn't `FRONTEND_ORIGIN` gets 403 `forbidden_origin`.
+- **Rate limits key on the client IP** (`http/clientIp.ts`). Behind the frontend's `/api` proxy that's `X-Forwarded-For`, believed only when the request carries `X-Proxy-Secret` matching `PROXY_SECRET`.
+
 ## Errors
 
 Every error response has one shape:
@@ -195,7 +229,9 @@ Never use `drizzle-kit push`: Drizzle doesn't know about the hand-written `booki
 
 ## Environment
 
-| Name           | Purpose                                       |
-| -------------- | --------------------------------------------- |
-| `DATABASE_URL` | Postgres connection string                    |
-| `PORT`         | Port to listen on; optional, defaults to 3001 |
+| Name              | Purpose                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`    | Postgres connection string                                                                      |
+| `PORT`            | Port to listen on; optional, defaults to 3001                                                   |
+| `FRONTEND_ORIGIN` | The origin allowed to send state-changing browser requests; defaults to `http://localhost:3000` |
+| `PROXY_SECRET`    | Shared with the `/api` proxy; only then is `X-Forwarded-For` trusted. Optional                  |
