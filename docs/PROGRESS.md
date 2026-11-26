@@ -8,22 +8,51 @@ Each entry: what shipped, key decisions made (and why), what's next.
 
 ## Barbershop track
 
-The barbershop booking app is a pet project with a real backend, built as its own track (B1, B2, ...) alongside the portfolio stages. The umbrella spec is `docs/specs/barbershop.md`. Each B-stage is one PR, on a `feat/barbershop-bN-short-name` branch.
+The barbershop booking app is a pet project with a real backend, built as its own track (B1, B2, ...) alongside the portfolio stages. The umbrella spec is `docs/specs/barbershop.md`. Each B-stage is one PR, on a `feat/barbershop-bN-short-name` branch; a stage split into several PRs gets letters (B3a, B3b).
 
 | Stage | Name                  | Delivers                                                                                                                    | Status                       |
 | ----- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | B1    | Spec                  | `docs/specs/barbershop.md` and this breakdown                                                                               | Done                         |
-| B2    | Data model            | API app skeleton, Docker Postgres, Drizzle schema and migrations (exclusion constraint included), seed, DB constraint tests | Implemented, awaiting review |
-| B3    | Public API            | Fastify server, `modules/barbershop-contracts`, public endpoints, slot generation, rate limits, integration tests           | Planned                      |
+| B2    | Data model            | API app skeleton, Docker Postgres, Drizzle schema and migrations (exclusion constraint included), seed, DB constraint tests | Done                         |
+| B3a   | Public reads          | Fastify server, `modules/barbershop-contracts`, error format, health, shop, services, barbers, availability (slots)         | Implemented, awaiting review |
+| B3b   | Guest bookings        | Create, look up and cancel a booking, `23P01` → 409, rate limits                                                            | Planned                      |
 | B4    | Auth                  | argon2id passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                  | Planned                      |
 | B5    | Admin API             | Admin bookings, services, barbers and hours, the overview, analytics                                                        | Planned                      |
 | B6    | Frontend: public site | `apps/barbershop`: landing, booking flow, lookup and cancel, `/api` proxy, e2e smoke tests                                  | Planned                      |
 | B7    | Frontend: admin       | Admin login, overview, bookings table, services and barbers CRUD, hours editor, charts                                      | Planned                      |
 | B8    | Deploy                | Neon, the API on Railway, Render or Fly, the frontend Worker on Cloudflare, CI for both apps                                | Planned                      |
 
+### B3a — Public reads
+
+**Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`. B3 is split in two PRs: reads here, guest bookings in B3b.
+
+**Shipped:**
+
+- **`modules/barbershop-contracts`:** zod schemas, with their inferred types, for the shop, services, barbers, the availability query and response, the error envelope, and the normalising `phone` schema (used in B3b).
+- **`apps/barbershop-api`, the HTTP server:**
+  - `buildApp({ db, now })` builds the Fastify app with the database and clock passed in. `server.ts` loads `.env`, listens on `PORT`, and shuts down gracefully on SIGINT/SIGTERM. New Nx targets: `dev` (`tsx watch`) and `start`.
+  - Route schemas come from the contracts: requests are validated with them, and responses are serialised through them, so columns outside the contract never leave the server.
+  - One error envelope for everything: 422 `validation_failed` with the failing fields, 404 `not_found`, other 4xx kept with their own status (malformed JSON stays 400), and a generic 500 whose details only go to the log.
+- **Endpoints:** `GET /health` (checks the database, 503 if it can't reach it), `/v1/shop`, `/v1/services`, `/v1/barbers`, `/v1/availability`.
+- **`src/schedule/slots.ts`:** `freeSlots`, a pure function: the 15-minute grid in shop-clock minutes, the whole service fitting before the end, the break, existing bookings, a 1-hour lead time and a 60-day horizon. Each start is converted to an instant in exactly one place, with `@date-fns/tz`.
+- **Tests, 33 in all:** the slot rules including both DST changes (unit), the error handler's rules, the catalogue routes, and availability against the real database (booked vs cancelled, day off, 404, 422), all through `app.inject()` in rolled-back transactions.
+
+**Decisions:**
+
+- **Time rules are code constants** (60-day horizon, 1-hour lead, 2-hour guest cancel cutoff). Admin-editable settings can come later.
+- **Phones: a leading `+` and 7-15 digits,** no `libphonenumber-js`.
+- **`zod` is in the pnpm catalog,** because the contracts and the API must share one copy.
+- **The production bundler moves to B8.** Nothing runs in production before then; `tsx` covers dev and tests.
+- **The availability query writes `'cancelled'` as a literal,** so Postgres can match it against the overlap constraint's partial GiST index (checked with `EXPLAIN`).
+- **New env var `PORT`** (optional, default 3001), in `.env.example`. Nothing to set in Cloudflare.
+
+**Next:** B3b — create, look up and cancel guest bookings.
+
+---
+
 ### B2 — Data model
 
-**Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`. No HTTP server yet.
+**Status:** Done - merged.
 
 **Shipped:**
 

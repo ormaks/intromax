@@ -1,75 +1,15 @@
 import { eq } from "drizzle-orm";
-import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import { inRolledBackTransaction } from "../test/db";
+import { addBarberAndService, book } from "../test/fixtures";
 import * as schema from "./schema";
 import type { TimeRange } from "./tstzrange";
-
-/*
- * Runs against the database in DATABASE_URL (`db:up` + `db:migrate` first).
- * Every test runs inside a transaction that is always rolled back, so
- * nothing it inserts is left behind.
- */
-
-const url = process.env.DATABASE_URL;
-if (!url)
-  throw new Error("DATABASE_URL is not set. Copy .env.example to .env.");
-
-const pool = new Pool({ connectionString: url });
-afterAll(() => pool.end());
-
-type Tx = NodePgDatabase<typeof schema>;
-
-async function inRolledBackTransaction(run: (db: Tx) => Promise<void>) {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await run(drizzle(client, { schema }));
-  } finally {
-    try {
-      await client.query("ROLLBACK");
-    } finally {
-      client.release();
-    }
-  }
-}
 
 const at = (time: string) => new Date(`2026-12-01T${time}:00Z`);
 const range = (from: string, to: string): TimeRange => ({
   start: at(from),
   end: at(to),
 });
-
-let referenceCounter = 0;
-
-async function addBarberAndService(db: Tx) {
-  const [barber] = await db
-    .insert(schema.barbers)
-    .values({ name: "Test Barber" })
-    .returning();
-  const [service] = await db
-    .insert(schema.services)
-    .values({ name: "Cut", durationMinutes: 30, priceCents: 2500 })
-    .returning();
-  if (!barber || !service) throw new Error("Fixture insert returned nothing");
-  return { barberId: barber.id, serviceId: service.id };
-}
-
-function book(
-  db: Tx,
-  ids: { barberId: string; serviceId: string },
-  during: TimeRange,
-) {
-  return db.insert(schema.bookings).values({
-    ...ids,
-    reference: `TEST-${++referenceCounter}`,
-    during,
-    priceCents: 2500,
-    durationMinutes: (during.end.getTime() - during.start.getTime()) / 60_000,
-    customerName: "Guest",
-    customerPhone: "+15550000",
-  });
-}
 
 /** Postgres's error code for an exclusion constraint violation. */
 const EXCLUSION_VIOLATION = "23P01";

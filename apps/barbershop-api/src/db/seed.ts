@@ -1,5 +1,5 @@
-import { existsSync } from "node:fs";
 import { count, eq } from "drizzle-orm";
+import { loadEnv, requireEnv } from "../env";
 import {
   type OpeningDay,
   type WorkingDay,
@@ -126,12 +126,8 @@ async function storedSchedules(tx: Pick<Db, "select">) {
 async function seed() {
   assertHoursFitOpening(BARBERS);
 
-  if (existsSync(".env")) process.loadEnvFile(".env");
-  const url = process.env.DATABASE_URL;
-  if (!url)
-    throw new Error("DATABASE_URL is not set. Copy .env.example to .env.");
-
-  const { db, pool } = createDb(url);
+  loadEnv();
+  const { db, pool } = createDb(requireEnv("DATABASE_URL"));
   try {
     await db.transaction(async (tx) => {
       await tx
