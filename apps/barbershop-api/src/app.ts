@@ -10,6 +10,7 @@ import type { Db } from "./db/client";
 import { originCheck } from "./http/auth";
 import { clientIp } from "./http/clientIp";
 import { errorHandler, notFoundHandler } from "./http/errors";
+import { adminRoutes } from "./routes/admin";
 import { authRoutes } from "./routes/auth";
 import { availabilityRoutes } from "./routes/availability";
 import { bookingRoutes } from "./routes/bookings";
@@ -67,6 +68,7 @@ export function buildApp(
   app.register(availabilityRoutes, { db, now, prefix: "/v1" });
   app.register(bookingRoutes, { db, now, prefix: "/v1" });
   app.register(authRoutes, { db, now, prefix: "/v1" });
+  app.register(adminRoutes, { db, now, prefix: "/v1/admin" });
 
   return app;
 }

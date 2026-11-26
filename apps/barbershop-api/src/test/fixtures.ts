@@ -69,6 +69,18 @@ export async function addAdmin(db: Db, passwordHash = "unused") {
   return user;
 }
 
+/** Replaces the shop's opening hours: every weekday 08:00-19:00. */
+export async function openEveryDay(db: Db) {
+  await db.delete(schema.openingHours);
+  await db.insert(schema.openingHours).values(
+    [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({
+      weekday,
+      opensAt: "08:00",
+      closesAt: "19:00",
+    })),
+  );
+}
+
 /** A confirmed guest booking. Await it, or chain `.returning()` first. */
 export function book(
   db: Db,
