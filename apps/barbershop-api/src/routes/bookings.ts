@@ -6,6 +6,7 @@ import {
 import { and, eq } from "drizzle-orm";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { z } from "zod";
+import { assertBookable } from "../bookings/bookable";
 import { findGuestBooking } from "../bookings/find";
 import { newReference } from "../bookings/reference";
 import { bookingView } from "../bookings/view";
@@ -18,13 +19,8 @@ import {
 import { bookings } from "../db/schema";
 import type { TimeRange } from "../db/tstzrange";
 import { HttpError } from "../http/errors";
+import { GUEST_CANCEL_CUTOFF_MINUTES } from "../schedule/slots";
 import {
-  freeSlots,
-  GUEST_CANCEL_CUTOFF_MINUTES,
-  shopClock,
-} from "../schedule/slots";
-import {
-  barberHoursOn,
   requireActiveBarber,
   requireActiveService,
   shopTimezone,
@@ -63,29 +59,13 @@ export const bookingRoutes: FastifyPluginAsyncZod<{
       const barber = await requireActiveBarber(db, body.barberId);
       const timezone = await shopTimezone(db);
 
-      // The start must be one the availability endpoint would offer: on the
-      // grid, inside the barber's hours, clear of the break, inside the
-      // booking window. Other bookings are left out here on purpose: the
-      // database's overlap constraint checks them, race-free, on insert.
-      const local = shopClock(start, timezone);
-      const hours = await barberHoursOn(db, barber.id, local.weekday);
-      const offered = hours
-        ? freeSlots({
-            date: local.date,
-            timezone,
-            hours,
-            durationMinutes: service.durationMinutes,
-            bookings: [],
-            now: now(),
-          })
-        : [];
-      if (!offered.some((slot) => slot.start.getTime() === start.getTime())) {
-        throw new HttpError(
-          422,
-          "slot_unavailable",
-          "That time can't be booked. Pick one of the offered times.",
-        );
-      }
+      await assertBookable(db, {
+        barberId: barber.id,
+        durationMinutes: service.durationMinutes,
+        start,
+        timezone,
+        now: now(),
+      });
 
       const during: TimeRange = {
         start,

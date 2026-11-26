@@ -61,9 +61,11 @@ src/
   http/clientIp.ts  the client IP for rate limits (proxy-aware)
   routes/           one Fastify plugin per area: health, shop, catalogue,
                     availability, bookings; lookups.ts holds their shared reads
-  admin/            admin-side queries and rules (weekly hours, bookings to review)
+  admin/            admin-side queries: weekly hours, bookings to review, the bookings
+                    table, overview and analytics numbers
   auth/             password hashing (scrypt), sessions, creating admins
-  bookings/         reference codes, the guest lookup query, the response view
+  bookings/         reference codes, the guest lookup, the response view, and
+                    assertBookable (the start rule shared by guests and admins)
   catalogue/        stored hours in the API's shape, shared by public and admin routes
   scripts/          create-admin and its terminal prompts
   schedule/         pure time logic: clock helpers, opening-hours check, freeSlots
