@@ -86,6 +86,11 @@ export function book(
   db: Db,
   ids: { barberId: string; serviceId: string },
   during: TimeRange,
+  guest: Partial<{
+    customerName: string;
+    customerPhone: string;
+    priceCents: number;
+  }> = {},
 ) {
   return db.insert(schema.bookings).values({
     ...ids,
@@ -95,5 +100,6 @@ export function book(
     durationMinutes: (during.end.getTime() - during.start.getTime()) / 60_000,
     customerName: "Guest",
     customerPhone: "+15550000",
+    ...guest,
   });
 }

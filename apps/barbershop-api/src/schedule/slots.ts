@@ -46,6 +46,7 @@ export function freeSlots({
   durationMinutes,
   bookings,
   now,
+  leadMinutes = MIN_LEAD_MINUTES,
 }: {
   /** A day on the shop's calendar, "YYYY-MM-DD". */
   date: string;
@@ -56,10 +57,12 @@ export function freeSlots({
   /** The barber's non-cancelled bookings around that day. */
   bookings: TimeRange[];
   now: Date;
+  /** How soon from now a start may be; guests get MIN_LEAD_MINUTES. */
+  leadMinutes?: number;
 }): FreeSlot[] {
   const [year = NaN, month = NaN, day = NaN] = date.split("-").map(Number);
 
-  const earliest = now.getTime() + MIN_LEAD_MINUTES * MINUTE;
+  const earliest = now.getTime() + leadMinutes * MINUTE;
   const latest = now.getTime() + BOOKING_HORIZON_DAYS * DAY;
 
   const open = roundUp(toMinutes(hours.startsAt), SLOT_STEP_MINUTES);

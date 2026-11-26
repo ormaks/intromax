@@ -2,6 +2,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { Db } from "../../db/client";
 import { requireAdmin } from "../../http/auth";
 import { adminBarberRoutes } from "./barbers";
+import { adminBookingRoutes } from "./bookings";
 import { adminServiceRoutes } from "./services";
 
 /**
@@ -19,4 +20,5 @@ export const adminRoutes: FastifyPluginAsyncZod<{
   app.addHook("onRequest", requireAdmin({ db, now }));
   app.register(adminServiceRoutes, { db });
   app.register(adminBarberRoutes, { db, now });
+  app.register(adminBookingRoutes, { db, now });
 };

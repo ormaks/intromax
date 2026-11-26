@@ -1,34 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { App } from "../../app";
-import { createSession } from "../../auth/sessions";
 import type { Db } from "../../db/client";
-import { withApp } from "../../test/app";
-import {
-  addAdmin,
-  addTuesdayBarber,
-  book,
-  NOW,
-  openEveryDay,
-} from "../../test/fixtures";
+import { signInAsAdmin, withApp } from "../../test/app";
+import { addTuesdayBarber, book, NOW, openEveryDay } from "../../test/fixtures";
 
 const withFixedClock = { now: () => NOW };
 
-/** Signs an admin in and returns a request helper that sends the cookie. */
-async function signedIn(app: App, db: Db) {
-  const admin = await addAdmin(db);
-  const { token } = await createSession(db, admin.id, NOW);
-  return (
-    method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE",
-    url: string,
-    payload?: object,
-  ) =>
-    app.inject({
-      method,
-      url: `/v1/admin${url}`,
-      cookies: { session: token },
-      ...(payload && { payload }),
-    });
-}
+const signedIn = (app: App, db: Db) => signInAsAdmin(app, db, NOW);
 
 /** Tuesday 09:00-10:00 New York (14:00Z-15:00Z), the barber's day in fixtures. */
 const tuesdayAt = (from: string, to: string) => ({

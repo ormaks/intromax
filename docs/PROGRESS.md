@@ -17,15 +17,42 @@ The barbershop booking app is a pet project with a real backend, built as its ow
 | B3a   | Public reads          | Fastify server, `modules/barbershop-contracts`, error format, health, shop, services, barbers, availability (slots)         | Done                         |
 | B3b   | Guest bookings        | Create, look up and cancel a booking, `23P01` → 409, rate limits                                                            | Done                         |
 | B4    | Auth                  | scrypt passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                    | Done                         |
-| B5a   | Admin catalogue       | Services and barbers CRUD, weekly hours with the opening-hours check, bookings to review                                    | Implemented, awaiting review |
-| B5b   | Admin bookings        | Bookings table, view/edit/complete/cancel, the overview, analytics                                                          | Planned                      |
+| B5a   | Admin catalogue       | Services and barbers CRUD, weekly hours with the opening-hours check, bookings to review                                    | Done                         |
+| B5b   | Admin bookings        | Bookings table, view/edit/complete/cancel, the overview, analytics                                                          | Implemented, awaiting review |
 | B6    | Frontend: public site | `apps/barbershop`: landing, booking flow, lookup and cancel, `/api` proxy, e2e smoke tests                                  | Planned                      |
 | B7    | Frontend: admin       | Admin login, overview, bookings table, services and barbers CRUD, hours editor, charts                                      | Planned                      |
 | B8    | Deploy                | Neon, the API on Railway, Render or Fly, the frontend Worker on Cloudflare, CI for both apps                                | Planned                      |
 
+### B5b — Admin bookings
+
+**Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`. The admin API is complete.
+
+**Shipped:**
+
+- **The bookings table** (`GET /v1/admin/bookings`): filters by shop-calendar dates, status and barber, a search over name, phone (by digits) and reference, newest first, 25 per page with the total.
+- **One booking** with the guest's contact details, notes and timestamps.
+- **Edits** (`PATCH`): customer details, notes, barber, service, time. Only confirmed bookings; a move must fit the barber's schedule (grid, hours, break) but not the guests' 1-hour lead time; a new service re-copies its price and duration; an overlap is still 409 `slot_taken` from the database.
+- **Complete and cancel:** one conditional update each, so two clicks (or a cancel racing a complete) can't both succeed; anything not confirmed is 409 `not_confirmed`.
+- **Overview:** today's bookings, revenue (completed) and expected (still confirmed), the next 10 confirmed bookings, the top service of the last 30 days.
+- **Analytics:** per day (empty days included), by service and by barber, up to 366 days at a time.
+- **`assertBookable`:** the "is this start bookable?" rule, now shared by guest booking and admin edits; `freeSlots` takes the lead time as a setting.
+- **Tests, 91 in all:** the table's filters and search (with `%` taken literally), a whole-form edit that changes nothing on the schedule (no re-check, no re-price), editing sooner than guests may book, past and off-grid moves refused, re-snapshot on a service change, overlap and history refused, complete then cancel refused, today's three totals, and analytics putting 23:30 New York on its own day.
+
+**Decisions:**
+
+- **Complete any time while confirmed** (an early payment counts as revenue).
+- **An edit is a move only when barber, service or time actually differ** from the booking, so sending the whole form back never re-checks the schedule or re-copies a newer price.
+- **Admin edits: the schedule, no lead time; only confirmed bookings.**
+- **Days are grouped with `AT TIME ZONE` in SQL,** grouped by position (`GROUP BY 1`) because the timezone is a query parameter; writing the expression twice made Postgres refuse to match them (42803).
+- **Overview and analytics tests delete all bookings inside their rolled-back transaction,** so they count only their own data whatever the dev database holds.
+
+**Next:** B6 — the public site (`apps/barbershop`).
+
+---
+
 ### B5a — Admin catalogue
 
-**Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`. B5 is split in two PRs: the catalogue here, bookings in B5b.
+**Status:** Done - merged.
 
 **Shipped:**
 
