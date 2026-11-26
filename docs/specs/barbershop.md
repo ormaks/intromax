@@ -49,7 +49,7 @@ This rebuilds an earlier frontend-only version. That version was React + Vite wi
   - Bookings snapshot the service's price and duration.
   - Booking times are `tstzrange`, prices are integer cents.
   - Double-booking is prevented by a Postgres exclusion constraint, not only by the UI.
-- **Real auth:** argon2id-hashed passwords and server-side sessions in Postgres, behind an HTTP-only cookie.
+- **Real auth:** scrypt-hashed passwords and server-side sessions in Postgres, behind an HTTP-only cookie.
 - **Design:** existing `modules/ui` components. The old CSS animations (barber pole, shimmer, grain, marquee) are optional extras.
 
 **Out of scope:**
@@ -133,7 +133,7 @@ shop_settings (single row)      opening_hours (one row per open weekday)
 | --------------- | ------------- | ---------------------------------------- |
 | `id`            | `uuid` PK     |                                          |
 | `email`         | `text`        | not null; unique index on `lower(email)` |
-| `password_hash` | `text`        | not null; argon2id PHC string            |
+| `password_hash` | `text`        | not null; scrypt PHC string              |
 | `name`          | `text`        | not null                                 |
 | `role`          | `user_role`   | not null; enum with one value: `'admin'` |
 | `created_at`    | `timestamptz` | not null, default `now()`                |
@@ -143,7 +143,7 @@ shop_settings (single row)      opening_hours (one row per open weekday)
 - **`role` is a Postgres enum**, so the database rejects any value it doesn't know.
   - Adding `'barber'` and `'customer'` later is one line: `ALTER TYPE user_role ADD VALUE ...`.
   - The trade-off: removing a value from an enum is awkward, so values should only ever be added. That fits here.
-- **`password_hash` holds the PHC string** (`$argon2id$v=19$m=...,t=...,p=...$salt$hash`). The salt and the cost settings live inside the string, so stronger settings can be adopted later and old hashes still verify. The plain password never touches the database.
+- **`password_hash` holds the PHC string** (`$scrypt$ln=17,r=8,p=1$salt$hash`). The salt and the cost settings live inside the string, so stronger settings can be adopted later and old hashes still verify. The plain password never touches the database.
 
 ### `sessions`
 
@@ -467,7 +467,7 @@ Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That ke
 ## Auth approach
 
 - **The admin account** is created by a CLI script in the API app (`create-admin`), which asks for an email, name and password. There is no sign-up endpoint, so nobody can register themselves as admin.
-- **Passwords** are hashed with **argon2id**, the current OWASP first choice. It's deliberately slow and memory-hard, so stolen hashes are expensive to crack. Login always answers "invalid email or password", whichever part was wrong. The library is confirmed in B4 (see open questions).
+- **Passwords** are hashed with **scrypt** (Node's built-in `crypto.scrypt`, so no dependency), with OWASP's parameters: N = 2^17, r = 8, p = 1, about 128 MiB per hash. It's deliberately slow and memory-hard, so stolen hashes are expensive to crack. OWASP lists argon2id first and scrypt as the alternative; scrypt avoids a native dependency. Login always answers "invalid email or password", whichever part was wrong, and an unknown email is still checked against a dummy hash, so the response time doesn't reveal which emails have accounts. Login is limited to 5 attempts per 15 minutes per IP.
 - **Sessions are server-side rows**, not JWTs.
   1. On login, the API generates 32 random bytes as the token.
   2. It stores `sha256(token)` in `sessions` with `expires_at = now + 30 days`.
@@ -480,16 +480,16 @@ Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That ke
   This follows the pattern of the Lucia auth guide, written by hand (around 100 lines) rather than pulled in as a library, because building it is the lesson.
 
 - **`HttpOnly`** means JavaScript in the page can't read the cookie, so an XSS bug can't steal the session. **`SameSite=Lax`** means the browser doesn't attach it to cross-site POSTs, which is the main CSRF defence. On top of that, the API rejects state-changing requests whose `Origin` header isn't the frontend's.
-- **Same origin through a proxy (proposed).** The frontend runs on Cloudflare (`*.workers.dev`) and the API on Railway, Render or Fly, which are different sites. Browsers increasingly block cookies set by a different site ("third-party cookies").
+- **Same origin through a proxy.** The frontend runs on Cloudflare (`*.workers.dev`) and the API on Railway, Render or Fly, which are different sites. Browsers increasingly block cookies set by a different site ("third-party cookies").
   - The plan: the browser only ever talks to the Next app, which forwards `/api/*` to the Fastify API, so the session cookie is first-party.
   - Admin pages rendered on the server forward the cookie when they call the API.
-  - This also removes the need for CORS. Confirmed in B4/B6 (see open questions).
+  - This also removes the need for CORS.
 - **Rate limiting** (`@fastify/rate-limit`), per IP and in memory, which is fine for one API instance:
   - booking lookup and cancel: 10 per minute each, so nobody can guess the phone behind a known reference;
   - creating a booking: 10 per hour, so one script can't fill the calendar;
-  - login (B4).
+  - login: 5 per 15 minutes, so guessing a password is hopeless.
 
-  **Behind the `/api` proxy (B6/B8)** every request reaches the API from the proxy's IP, so all guests would share one counter. The proxy must pass the guest's IP in `X-Forwarded-For`, and the API must trust that header from the proxy only (Fastify's `trustProxy`), since any client can send it.
+  **Behind the `/api` proxy (B6/B8)** every request reaches the API from the proxy's IP, so all guests would share one counter. The proxy passes the guest's IP in `X-Forwarded-For`, but any client can send that header, so the API believes it only when the request also carries the proxy's shared secret in `X-Proxy-Secret` (`PROXY_SECRET`, compared in constant time). An IP allow-list such as Fastify's `trustProxy` can't do this: a Cloudflare Worker sends from Cloudflare's shared address ranges, which any other Worker can use too. The API side is built in B4; the proxy sends the header from B6.
 
 ## Approach
 
@@ -521,19 +521,20 @@ Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That ke
 
 **Environment variables** (called out per AGENTS.md; each one lands in `.env.example` in its stage):
 
-| Name              | App            | Purpose                                                         | Introduced |
-| ----------------- | -------------- | --------------------------------------------------------------- | ---------- |
-| `DATABASE_URL`    | barbershop-api | Postgres connection string (Docker locally, Neon in production) | B2         |
-| `PORT`            | barbershop-api | The port the API listens on. Optional, defaults to 3001         | B3a        |
-| `FRONTEND_ORIGIN` | barbershop-api | The allowed `Origin` for state-changing requests                | B4         |
-| `API_URL`         | barbershop     | Where the Next app forwards `/api/*`                            | B6         |
+| Name              | App            | Purpose                                                                        | Introduced |
+| ----------------- | -------------- | ------------------------------------------------------------------------------ | ---------- |
+| `DATABASE_URL`    | barbershop-api | Postgres connection string (Docker locally, Neon in production)                | B2         |
+| `PORT`            | barbershop-api | The port the API listens on. Optional, defaults to 3001                        | B3a        |
+| `FRONTEND_ORIGIN` | barbershop-api | The allowed `Origin` for state-changing requests                               | B4         |
+| `PROXY_SECRET`    | barbershop-api | Shared with the `/api` proxy; only then is `X-Forwarded-For` trusted. Optional | B4         |
+| `API_URL`         | barbershop     | Where the Next app forwards `/api/*`                                           | B6         |
 
 **New dependencies, flagged now and confirmed in their stage:**
 
 - **B2 (approved):** `drizzle-orm`, `drizzle-kit`, `pg`, `@types/pg`, `tsx`, `vitest`. Docker Desktop (on WSL2) becomes a local prerequisite for running the database.
 - **B3a (approved):** `fastify`, `zod` (in the pnpm catalog, shared by the contracts module and the API), `fastify-type-provider-zod`, `@date-fns/tz`.
 - **B3b (approved):** `@fastify/rate-limit` (`~11.2.2`).
-- **B4:** `@fastify/cookie` and an argon2 binding.
+- **B4 (approved):** `@fastify/cookie`. Passwords use Node's built-in `crypto.scrypt`, so no hashing library.
 - **B6:** a chart library, for the admin analytics.
 - **External services:** Neon and one API host. Docker is a new local tool.
 
@@ -547,7 +548,7 @@ Barbershop track, each stage one PR, each explained step by step:
 | B2    | Data model            | The `apps/barbershop-api` skeleton (no HTTP yet), Docker Postgres, Drizzle schema and migrations including the exclusion constraint, the seed script, and tests that prove the DB constraints. |
 | B3a   | Public reads          | The Fastify server, `modules/barbershop-contracts`, the error format, `/health`, shop, services, barbers, availability with slot generation, and integration tests.                            |
 | B3b   | Guest bookings        | Create, look up and cancel a booking, error mapping (`23P01` → 409), rate limits, and integration tests.                                                                                       |
-| B4    | Auth                  | `users`/`sessions` in use, argon2id, login/logout/me, the `create-admin` CLI, the admin guard, the Origin check, and tests.                                                                    |
+| B4    | Auth                  | `users`/`sessions` in use, scrypt, login/logout/me, the `create-admin` CLI, the admin guard, the Origin check, and tests.                                                                      |
 | B5    | Admin API             | Admin bookings, services, barbers and hours, the overview and analytics, and tests.                                                                                                            |
 | B6    | Frontend: public site | The `apps/barbershop` Next app: the landing page, booking flow, lookup and cancel, the `/api` proxy, and e2e smoke tests.                                                                      |
 | B7    | Frontend: admin       | Admin login, overview, the bookings table, services and barbers CRUD with the hours editor, and analytics charts. Optional CSS animations.                                                     |
@@ -605,7 +606,7 @@ Designed for, not built:
 5. **Admin edits outside working hours.** When the admin moves a booking, should the API enforce working hours and the grid, or allow an override? Overlap is blocked by the DB either way. Proposed: enforce by default, with an explicit `force` flag.
 6. **Hours changed under existing bookings.** When a barber's new hours leave future bookings outside them, proposed: save anyway and return those bookings so the admin can deal with them. Should it block instead?
 7. **Deactivating a barber with future bookings.** Allow it, and list the bookings in the response? Or require them to be cancelled or moved first?
-8. **The argon2 library** (B4): `@node-rs/argon2` (prebuilt binaries, no compiler needed on Windows) or `argon2` (node-gyp). Or Node's built-in `crypto.scrypt`, with no dependency but not the first-choice algorithm. Proposed: `@node-rs/argon2`.
-9. **The `/api` proxy** (B4/B6): confirm that the frontend forwards `/api/*` to the API (first-party cookie, no CORS), rather than a custom domain with `api.` on the same site.
+8. **Password hashing: decided.** Node's built-in `crypto.scrypt`, with no dependency. See [Auth approach](#auth-approach).
+9. **The `/api` proxy: decided.** The frontend forwards `/api/*` to the API (first-party cookie, no CORS), with the guest's IP trusted only alongside the proxy's shared secret.
 10. **The API host** (B8): Railway, Render or Fly.io. Proposed: decide in B8 after comparing the free and cheap tiers then. The API code stays host-agnostic: a plain Node process, `PORT` from env.
 11. **The test runner: decided.** Vitest (see [Approach](#approach)).
