@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { inRolledBackTransaction } from "../test/db";
 import { addBarberAndService, book } from "../test/fixtures";
+import { PG_EXCLUSION_VIOLATION, postgresError } from "./errors";
 import * as schema from "./schema";
 import type { TimeRange } from "./tstzrange";
 
@@ -11,16 +12,11 @@ const range = (from: string, to: string): TimeRange => ({
   end: at(to),
 });
 
-/** Postgres's error code for an exclusion constraint violation. */
-const EXCLUSION_VIOLATION = "23P01";
-
 async function pgErrorCode(promise: Promise<unknown>) {
   try {
     await promise;
   } catch (error) {
-    // Drizzle wraps the driver's error; the Postgres code is on its cause.
-    const cause = (error as { cause?: { code?: string } }).cause;
-    return cause?.code;
+    return postgresError(error)?.code;
   }
   return undefined;
 }
@@ -32,7 +28,7 @@ describe("bookings_no_overlap", () => {
       await book(db, ids, range("10:00", "10:30"));
 
       expect(await pgErrorCode(book(db, ids, range("10:15", "10:45")))).toBe(
-        EXCLUSION_VIOLATION,
+        PG_EXCLUSION_VIOLATION,
       );
     }));
 

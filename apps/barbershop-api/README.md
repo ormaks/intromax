@@ -55,13 +55,16 @@ src/
   app.ts            buildApp({ db, now }): the Fastify app, not yet listening
   server.ts         the entry point: env, DB pool, listen on PORT, graceful shutdown
   env.ts            loadEnv() / requireEnv()
-  http/errors.ts    the error envelope, error handler, 404 handler, NotFoundError
-  routes/           one Fastify plugin per area: health, shop, catalogue, availability
+  http/errors.ts    the error envelope, error handler, 404 handler, HttpError
+  routes/           one Fastify plugin per area: health, shop, catalogue,
+                    availability, bookings; lookups.ts holds their shared reads
+  bookings/         reference codes, the guest lookup query, the response view
   schedule/         pure time logic: clock helpers, opening-hours check, freeSlots
   db/
     schema.ts       all tables, checks, enums (source for generated migrations)
     tstzrange.ts    custom column type: [start, end) range <-> { start, end }
     client.ts       createDb(url) -> { db, pool }; the Db type
+    errors.ts       reading Postgres error codes out of Drizzle's errors
     seed.ts         demo data
   test/             shared test helpers: rolled-back transactions, withApp, fixtures
 drizzle/            SQL migrations, committed and reviewed like code
@@ -101,6 +104,38 @@ sequenceDiagram
   Fastify-->>Client: 200 { slots }
 ```
 
+## Booking a slot
+
+`POST /v1/bookings` checks the start with the same `freeSlots` that availability uses (grid, hours, break, booking window), but with no bookings: other bookings are left to the database, the only place that can decide a race.
+
+```mermaid
+sequenceDiagram
+  participant G as Guest
+  participant R as routes/bookings.ts
+  participant S as freeSlots
+  participant PG as Postgres
+
+  G->>R: POST /v1/bookings { serviceId, barberId, start, name, phone }
+  R->>S: would this start be offered that day? (bookings: [])
+  alt not offered
+    R-->>G: 422 slot_unavailable
+  end
+  R->>PG: INSERT with a new reference, price and duration snapshots
+  alt overlaps a live booking (23P01)
+    R-->>G: 409 slot_taken
+  else reference already used (23505)
+    R->>PG: retry with a fresh reference (up to 3 tries)
+  end
+  R-->>G: 201 { reference, start, end, label, ... }
+```
+
+A guest then reaches the booking with `{ reference, phone }` in a POST body (never a query string, which ends up in logs):
+
+- `/v1/bookings/lookup`: a wrong phone answers exactly like an unknown reference, 404.
+- `/v1/bookings/cancel`: only a `confirmed` booking at least 2 hours away; otherwise 409 `not_cancellable`. The update is conditional on `status = 'confirmed'`, so two cancels arriving together can't both succeed.
+
+**Rate limits** are per IP, in memory, opted into per route with `config.rateLimit`: booking 10 per hour, lookup and cancel 10 per minute each.
+
 ## Errors
 
 Every error response has one shape:
@@ -117,12 +152,16 @@ Every error response has one shape:
 
 `code` is stable and meant for code to branch on; `message` is for people and may change. The rules (`src/http/errors.ts`):
 
-| Cause                                          | Status | `code`                                     |
-| ---------------------------------------------- | ------ | ------------------------------------------ |
-| Request fails its zod schema                   | 422    | `validation_failed`, with `fields`         |
-| `throw new NotFoundError()`, or no such route  | 404    | `not_found`                                |
-| Fastify's own client errors (bad JSON, 415, …) | as-is  | `bad_request`, `unsupported_media_type`, … |
-| Anything else                                  | 500    | `internal` (details only in the log)       |
+| Cause                                          | Status | `code`                                       |
+| ---------------------------------------------- | ------ | -------------------------------------------- |
+| Request fails its zod schema                   | 422    | `validation_failed`, with `fields`           |
+| `throw new HttpError(status, code, message)`   | status | `code`, e.g. `slot_taken`, `not_cancellable` |
+| `throw new NotFoundError()`, or no such route  | 404    | `not_found`                                  |
+| Fastify's own client errors (bad JSON, 415, …) | as-is  | `bad_request`, `unsupported_media_type`, …   |
+| A rate limit hit                               | 429    | `too_many_requests`                          |
+| Anything else                                  | 500    | `internal` (details only in the log)         |
+
+An `HttpError`'s message goes to the client as-is, so it never contains internals. A 500 is logged through `loggableError`: for a failed query that keeps only the SQL text, error code and constraint, because the query's values (a guest's phone, name, notes) ride along in the raw error.
 
 ## Time
 
@@ -143,7 +182,7 @@ Never use `drizzle-kit push`: Drizzle doesn't know about the hand-written `booki
 
 ## Tests
 
-- **Unit tests** for pure logic sit next to it (`schedule/*.test.ts`).
+- **Unit tests** for pure logic sit next to it (`schedule/*.test.ts`, `bookings/reference.test.ts`).
 - **Database and HTTP tests** run against the real local Postgres. Each runs inside a transaction that is always rolled back (`test/db.ts`), so they leave the seeded dev data untouched. HTTP tests go through `app.inject()` (`test/app.ts`): real routing, validation and serialisation, no open port. They pass a fixed `now`, so time-based rules are repeatable.
 - The database must be up and migrated first (`db:up`, `db:migrate`).
 

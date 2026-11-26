@@ -119,6 +119,18 @@ export function freeSlots({
   return slots;
 }
 
+/** Where an instant falls on the shop's calendar and clock. */
+export function shopClock(instant: Date, timezone: string) {
+  const local = new TZDate(instant.getTime(), timezone);
+  const month = String(local.getMonth() + 1).padStart(2, "0");
+  const day = String(local.getDate()).padStart(2, "0");
+  return {
+    date: `${local.getFullYear()}-${month}-${day}`,
+    weekday: local.getDay(),
+    minutes: local.getHours() * 60 + local.getMinutes(),
+  };
+}
+
 /**
  * A day on the shop's calendar as instants: from its midnight to the next.
  * Usually 24 hours long, but 23 or 25 on the days the clocks change.

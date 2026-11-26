@@ -86,12 +86,13 @@ This rebuilds an earlier frontend-only version. That version was React + Vite wi
 5. **Submit.** `POST /v1/bookings`. Three outcomes:
    - **201:** the confirmation page shows the reference (e.g. `K7M2-9QXA`), the service, barber, time and price.
    - **409 `slot_taken`:** someone booked the slot in the meantime. The UI says so, reloads the slots and returns to step 3 with the guest's details kept.
-   - **422:** validation failed (e.g. the slot is now in the past). The UI shows the error.
+   - **422:** `validation_failed` (a field is wrong; `fields` says which) or `slot_unavailable` (the time is no longer bookable, e.g. it's now less than an hour away). The UI shows the error.
+   - **429:** too many bookings from this IP in the last hour.
 
 ### Guest looks up or cancels
 
 1. **`/lookup`:** enter the reference + phone, which sends `POST /v1/bookings/lookup` and shows the booking and its status.
-2. **Cancel:** `POST /v1/bookings/cancel` with the same pair. It's allowed only while the booking is `confirmed` and hasn't started yet.
+2. **Cancel:** `POST /v1/bookings/cancel` with the same pair. It's allowed only while the booking is `confirmed` and starts at least 2 hours from now; otherwise 409 `not_cancellable`, and the UI suggests calling the shop.
 
 ### Admin
 
@@ -417,16 +418,16 @@ Errors share one shape: `{ error: { code, message, fields? } }`.
 
 **Public** (no session):
 
-| Method | Path                  | Purpose                                                                                 |
-| ------ | --------------------- | --------------------------------------------------------------------------------------- |
-| GET    | `/health`             | Liveness for the host (also checks the DB connection).                                  |
-| GET    | `/v1/shop`            | Shop name, timezone, contact details, opening hours.                                    |
-| GET    | `/v1/services`        | Active services, in `sort_order`.                                                       |
-| GET    | `/v1/barbers`         | Active barbers with their weekly hours.                                                 |
-| GET    | `/v1/availability`    | `?serviceId&barberId&date`: free start times (see above).                               |
-| POST   | `/v1/bookings`        | Create a guest booking. 201 with the reference, 409 `slot_taken`, 422 on invalid input. |
-| POST   | `/v1/bookings/lookup` | `{ reference, phone }`: the booking, or 404. Rate-limited.                              |
-| POST   | `/v1/bookings/cancel` | `{ reference, phone }`: cancel if it's confirmed and in the future. Rate-limited.       |
+| Method | Path                  | Purpose                                                                                                                          |
+| ------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/health`             | Liveness for the host (also checks the DB connection).                                                                           |
+| GET    | `/v1/shop`            | Shop name, timezone, contact details, opening hours.                                                                             |
+| GET    | `/v1/services`        | Active services, in `sort_order`.                                                                                                |
+| GET    | `/v1/barbers`         | Active barbers with their weekly hours.                                                                                          |
+| GET    | `/v1/availability`    | `?serviceId&barberId&date`: free start times (see above).                                                                        |
+| POST   | `/v1/bookings`        | Create a guest booking. 201 with the reference, 409 `slot_taken`, 422 `slot_unavailable` or `validation_failed`. Rate-limited.   |
+| POST   | `/v1/bookings/lookup` | `{ reference, phone }`: the booking, or 404. Rate-limited.                                                                       |
+| POST   | `/v1/bookings/cancel` | `{ reference, phone }`: cancel if it's confirmed and starts at least 2 hours from now, else 409 `not_cancellable`. Rate-limited. |
 
 Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That keeps the phone number out of URLs, which end up in server logs, proxies and browser history.
 
@@ -483,7 +484,12 @@ Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That ke
   - The plan: the browser only ever talks to the Next app, which forwards `/api/*` to the Fastify API, so the session cookie is first-party.
   - Admin pages rendered on the server forward the cookie when they call the API.
   - This also removes the need for CORS. Confirmed in B4/B6 (see open questions).
-- **Rate limiting** (`@fastify/rate-limit`): per IP on login, booking lookup and booking cancel. It's in memory, which is fine for one API instance.
+- **Rate limiting** (`@fastify/rate-limit`), per IP and in memory, which is fine for one API instance:
+  - booking lookup and cancel: 10 per minute each, so nobody can guess the phone behind a known reference;
+  - creating a booking: 10 per hour, so one script can't fill the calendar;
+  - login (B4).
+
+  **Behind the `/api` proxy (B6/B8)** every request reaches the API from the proxy's IP, so all guests would share one counter. The proxy must pass the guest's IP in `X-Forwarded-For`, and the API must trust that header from the proxy only (Fastify's `trustProxy`), since any client can send it.
 
 ## Approach
 
@@ -526,7 +532,7 @@ Lookup and cancel are `POST` with a JSON body rather than `GET ?phone=`. That ke
 
 - **B2 (approved):** `drizzle-orm`, `drizzle-kit`, `pg`, `@types/pg`, `tsx`, `vitest`. Docker Desktop (on WSL2) becomes a local prerequisite for running the database.
 - **B3a (approved):** `fastify`, `zod` (in the pnpm catalog, shared by the contracts module and the API), `fastify-type-provider-zod`, `@date-fns/tz`.
-- **B3b:** `@fastify/rate-limit`.
+- **B3b (approved):** `@fastify/rate-limit` (`~11.2.2`).
 - **B4:** `@fastify/cookie` and an argon2 binding.
 - **B6:** a chart library, for the admin analytics.
 - **External services:** Neon and one API host. Docker is a new local tool.

@@ -1,40 +1,16 @@
 import type { Slot } from "@intromax/barbershop-contracts";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import type { Db } from "../db/client";
-import { barberWorkingHours, bookings, shopSettings } from "../db/schema";
+import { bookings } from "../db/schema";
 import { withApp } from "../test/app";
-import { addBarberAndService, book } from "../test/fixtures";
+import {
+  addTuesdayBarber as setUp,
+  book,
+  NOW,
+  TUESDAY,
+} from "../test/fixtures";
 
-// 2026-12-01 is a Tuesday; New York is UTC-5 then, so 10:00 local is 15:00Z.
-const TUESDAY = "2026-12-01";
-const NOW = new Date("2026-11-30T12:00:00Z");
 const withFixedClock = { now: () => NOW };
-
-/** A barber who works Tuesdays 09:00-11:00, in a New York shop. */
-async function setUp(db: Db) {
-  await db
-    .insert(shopSettings)
-    .values({
-      name: "Test Shop",
-      timezone: "America/New_York",
-      phone: "+15550000",
-      email: "shop@example.com",
-      address: "1 Test St",
-    })
-    .onConflictDoUpdate({
-      target: shopSettings.id,
-      set: { timezone: "America/New_York" },
-    });
-  const ids = await addBarberAndService(db);
-  await db.insert(barberWorkingHours).values({
-    barberId: ids.barberId,
-    weekday: 2,
-    startsAt: "09:00",
-    endsAt: "11:00",
-  });
-  return ids;
-}
 
 function url(ids: { barberId: string; serviceId: string }, date: string) {
   return `/v1/availability?serviceId=${ids.serviceId}&barberId=${ids.barberId}&date=${date}`;

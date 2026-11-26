@@ -1,11 +1,29 @@
 import type { ApiError } from "@intromax/barbershop-contracts";
 import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 import { hasZodFastifySchemaValidationErrors } from "fastify-type-provider-zod";
+import { postgresError } from "../db/errors";
+
+/**
+ * Throw from a handler to answer with this status and code, e.g.
+ * `new HttpError(409, "slot_taken", "That time was just booked")`.
+ * The message is shown to the client, so it must not contain internals.
+ */
+export class HttpError extends Error {
+  readonly statusCode: number;
+  readonly code: string;
+
+  constructor(statusCode: number, code: string, message: string) {
+    super(message);
+    this.name = "HttpError";
+    this.statusCode = statusCode;
+    this.code = code;
+  }
+}
 
 /** Throw from a handler to answer 404 `not_found`. */
-export class NotFoundError extends Error {
+export class NotFoundError extends HttpError {
   constructor(message = "Not found") {
-    super(message);
+    super(404, "not_found", message);
     this.name = "NotFoundError";
   }
 }
@@ -36,7 +54,7 @@ const CLIENT_ERROR_CODES: Record<number, string> = {
  * Every error leaves the API as `{ error: { code, message, fields? } }`:
  * - a request that fails its zod schema: 422 `validation_failed`, with the
  *   failing fields;
- * - `NotFoundError`: 404;
+ * - `HttpError` (and `NotFoundError`): its own status and code;
  * - any other client error (4xx), e.g. malformed JSON or a wrong
  *   Content-Type: its own status, reshaped;
  * - anything else: 500 with a generic message. The details go to the log
@@ -60,8 +78,10 @@ export function errorHandler(
       .send(errorBody("validation_failed", "Some fields are invalid", fields));
   }
 
-  if (error instanceof NotFoundError) {
-    return reply.code(404).send(errorBody("not_found", error.message));
+  if (error instanceof HttpError) {
+    return reply
+      .code(error.statusCode)
+      .send(errorBody(error.code, error.message));
   }
 
   const status = error.statusCode;
@@ -73,8 +93,27 @@ export function errorHandler(
       );
   }
 
-  request.log.error(error);
+  request.log.error({ err: loggableError(error) }, "unhandled error");
   return reply.code(500).send(errorBody("internal", "Something went wrong"));
+}
+
+/**
+ * What to log for an unexpected error. A failed query's error carries the
+ * values it was run with (a guest's phone, name, notes) in its message, its
+ * `params` and Postgres's `detail`, so for those only the SQL text, the
+ * error code and the constraint are kept. Other errors are logged whole.
+ */
+export function loggableError(error: unknown): unknown {
+  if (typeof error !== "object" || error === null || !("params" in error)) {
+    return error;
+  }
+  const pg = postgresError(error);
+  return {
+    type: "QueryError",
+    query: "query" in error ? error.query : undefined,
+    code: pg?.code,
+    constraint: pg?.constraint,
+  };
 }
 
 export function notFoundHandler(request: FastifyRequest, reply: FastifyReply) {
