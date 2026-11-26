@@ -14,17 +14,45 @@ The barbershop booking app is a pet project with a real backend, built as its ow
 | ----- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | B1    | Spec                  | `docs/specs/barbershop.md` and this breakdown                                                                               | Done                         |
 | B2    | Data model            | API app skeleton, Docker Postgres, Drizzle schema and migrations (exclusion constraint included), seed, DB constraint tests | Done                         |
-| B3a   | Public reads          | Fastify server, `modules/barbershop-contracts`, error format, health, shop, services, barbers, availability (slots)         | Implemented, awaiting review |
-| B3b   | Guest bookings        | Create, look up and cancel a booking, `23P01` → 409, rate limits                                                            | Planned                      |
+| B3a   | Public reads          | Fastify server, `modules/barbershop-contracts`, error format, health, shop, services, barbers, availability (slots)         | Done                         |
+| B3b   | Guest bookings        | Create, look up and cancel a booking, `23P01` → 409, rate limits                                                            | Implemented, awaiting review |
 | B4    | Auth                  | argon2id passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                  | Planned                      |
 | B5    | Admin API             | Admin bookings, services, barbers and hours, the overview, analytics                                                        | Planned                      |
 | B6    | Frontend: public site | `apps/barbershop`: landing, booking flow, lookup and cancel, `/api` proxy, e2e smoke tests                                  | Planned                      |
 | B7    | Frontend: admin       | Admin login, overview, bookings table, services and barbers CRUD, hours editor, charts                                      | Planned                      |
 | B8    | Deploy                | Neon, the API on Railway, Render or Fly, the frontend Worker on Cloudflare, CI for both apps                                | Planned                      |
 
+### B3b — Guest bookings
+
+**Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`.
+
+**Shipped:**
+
+- **Contracts:** `createBookingRequest`, `bookingAccess` (`{ reference, phone }`), the `booking` response (never includes the phone), and a `reference` schema that normalises what a guest types (`k7m2 9qxa` -> `K7M2-9QXA`, with O/I/L read as 0/1).
+- **`POST /v1/bookings`:** the start must be one `freeSlots` would offer that day (same rules as availability, other bookings left out), else 422 `slot_unavailable`. The insert snapshots price and duration; `23P01` becomes 409 `slot_taken`; a reference collision is retried. 201 with the booking.
+- **`POST /v1/bookings/lookup` and `/cancel`:** reference + phone in the body. A wrong phone answers exactly like an unknown reference (404). Cancel needs a confirmed booking at least 2 hours away, else 409 `not_cancellable`; the update is conditional on `status = 'confirmed'`, so two concurrent cancels can't both succeed.
+- **References:** 8 Crockford base32 characters from `crypto.randomInt`.
+- **`HttpError(status, code, message)`:** routes throw any status with its own code; `NotFoundError` is one case of it.
+- **Rate limits** (`@fastify/rate-limit`, per IP, in memory): booking 10 per hour; lookup and cancel 10 per minute each. A limit hit is 429 `too_many_requests` through the usual error handler.
+- **No guest data in logs:** a failed query's error carries its bound values (phone, name, notes), so the 500 log keeps only its SQL text, error code and constraint (`loggableError`).
+- **Tests, 49 in all:** reference and phone normalising, booking created / off-grid / taken, lookup with odd typing, wrong phone vs unknown reference, cancel once then refused, cancel at exactly 2 hours then rebook, cancel too late, the 11th lookup, and a real failed insert whose log entry holds no phone.
+
+**Decisions:**
+
+- **Rate-limit values:** 10 per minute for lookup and cancel, 10 per hour for booking (booking wasn't in the spec's list).
+- **One `not_cancellable` code** for every reason a cancel is refused; the reason is in the message.
+- **The booking check reuses `freeSlots`,** so booking and availability can't disagree.
+- **`@fastify/rate-limit` pinned to `~11.2.2`:** 11.3.0 was six days old.
+
+**Not done here:** the reference-collision retry has no test (a failed insert aborts the test's transaction); trusting the proxy's `X-Forwarded-For` waits for the `/api` proxy (B6/B8).
+
+**Next:** B4 — auth.
+
+---
+
 ### B3a — Public reads
 
-**Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`. B3 is split in two PRs: reads here, guest bookings in B3b.
+**Status:** Done - merged. B3 is split in two PRs: reads here, guest bookings in B3b.
 
 **Shipped:**
 

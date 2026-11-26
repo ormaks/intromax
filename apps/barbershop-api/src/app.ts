@@ -1,3 +1,4 @@
+import rateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import {
   serializerCompiler,
@@ -7,6 +8,7 @@ import {
 import type { Db } from "./db/client";
 import { errorHandler, notFoundHandler } from "./http/errors";
 import { availabilityRoutes } from "./routes/availability";
+import { bookingRoutes } from "./routes/bookings";
 import { catalogueRoutes } from "./routes/catalogue";
 import { healthRoutes } from "./routes/health";
 import { shopRoutes } from "./routes/shop";
@@ -35,10 +37,15 @@ export function buildApp(
   app.setErrorHandler(errorHandler);
   app.setNotFoundHandler(notFoundHandler);
 
+  // Counters live in this process's memory, which is enough for one
+  // instance. No route is limited unless it sets `config.rateLimit`.
+  app.register(rateLimit, { global: false });
+
   app.register(healthRoutes, { db });
   app.register(shopRoutes, { db, prefix: "/v1" });
   app.register(catalogueRoutes, { db, prefix: "/v1" });
   app.register(availabilityRoutes, { db, now, prefix: "/v1" });
+  app.register(bookingRoutes, { db, now, prefix: "/v1" });
 
   return app;
 }

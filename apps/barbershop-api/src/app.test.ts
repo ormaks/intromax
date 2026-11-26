@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import type { App } from "./app";
+import { HttpError } from "./http/errors";
 import { withApp } from "./test/app";
 
 describe("GET /health", () => {
@@ -23,7 +24,20 @@ describe("error responses", () => {
     app.get("/test/crash", async () => {
       throw new Error('relation "secret_table" does not exist');
     });
+    app.get("/test/taken", async () => {
+      throw new HttpError(409, "slot_taken", "That time was just booked");
+    });
   }
+
+  it("answers an HttpError with its own status and code", () =>
+    withApp(async (app) => {
+      withFailingRoutes(app);
+      const res = await app.inject({ method: "GET", url: "/test/taken" });
+      expect(res.statusCode).toBe(409);
+      expect(res.json()).toEqual({
+        error: { code: "slot_taken", message: "That time was just booked" },
+      });
+    }));
 
   it("answers 404 in the error shape for an unknown route", () =>
     withApp(async (app) => {
