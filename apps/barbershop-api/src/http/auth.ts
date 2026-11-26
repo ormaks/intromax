@@ -2,7 +2,6 @@ import type {
   FastifyReply,
   FastifyRequest,
   onRequestHookHandler,
-  preHandlerHookHandler,
 } from "fastify";
 import { type SessionUser, validateSession } from "../auth/sessions";
 import type { Db } from "../db/client";
@@ -47,7 +46,8 @@ export function sessionToken(request: FastifyRequest) {
 /**
  * Lets the request through only with a valid admin session: 401 without
  * one. Sets `request.user`, and refreshes the cookie when the session slid
- * forward.
+ * forward. Use it as an `onRequest` hook where a route has a body, so the
+ * session is checked before the body is read or validated.
  */
 export function requireAdmin({
   db,
@@ -55,7 +55,7 @@ export function requireAdmin({
 }: {
   db: Db;
   now: () => Date;
-}): preHandlerHookHandler {
+}): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
   return async (request, reply) => {
     const token = sessionToken(request);
     const session = token ? await validateSession(db, token, now()) : null;

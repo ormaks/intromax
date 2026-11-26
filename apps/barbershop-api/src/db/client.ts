@@ -1,4 +1,6 @@
-import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
+import type { NodePgQueryResultHKT } from "drizzle-orm/node-postgres";
+import { drizzle } from "drizzle-orm/node-postgres";
+import type { PgDatabase } from "drizzle-orm/pg-core";
 import { Pool } from "pg";
 import * as schema from "./schema";
 
@@ -12,5 +14,10 @@ export function createDb(url: string) {
   return { db: drizzle(pool, { schema }), pool };
 }
 
-/** Any Drizzle database with this schema: pool-backed, or one connection. */
-export type Db = NodePgDatabase<typeof schema>;
+/**
+ * Any Drizzle database with this schema: the pool-backed one, or a
+ * transaction. Code that opens its own transaction on a transaction gets a
+ * savepoint, so it nests: that's how tests run routes inside a transaction
+ * they always roll back.
+ */
+export type Db = PgDatabase<NodePgQueryResultHKT, typeof schema>;

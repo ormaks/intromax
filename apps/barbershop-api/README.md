@@ -61,8 +61,10 @@ src/
   http/clientIp.ts  the client IP for rate limits (proxy-aware)
   routes/           one Fastify plugin per area: health, shop, catalogue,
                     availability, bookings; lookups.ts holds their shared reads
+  admin/            admin-side queries and rules (weekly hours, bookings to review)
   auth/             password hashing (scrypt), sessions, creating admins
   bookings/         reference codes, the guest lookup query, the response view
+  catalogue/        stored hours in the API's shape, shared by public and admin routes
   scripts/          create-admin and its terminal prompts
   schedule/         pure time logic: clock helpers, opening-hours check, freeSlots
   db/
@@ -166,7 +168,7 @@ sequenceDiagram
 ```
 
 - **Only the token's hash is stored,** so a leaked `sessions` table can't be turned into working cookies. A token is 32 random bytes, so a fast SHA-256 is enough; passwords are guessable, so they get the slow scrypt.
-- **`requireAdmin`** (`http/auth.ts`) is the preHandler admin routes use. It sets `request.user`.
+- **`requireAdmin`** (`http/auth.ts`) checks the session and sets `request.user`. Everything under `/v1/admin` gets it from one `onRequest` hook in `routes/admin/index.ts`, so an admin route can't be added without it, and a caller without a session gets 401 before any body is read.
 - **CSRF:** `SameSite=Lax` keeps the cookie off cross-site POSTs, and every POST/PUT/PATCH/DELETE whose `Origin` isn't `FRONTEND_ORIGIN` gets 403 `forbidden_origin`.
 - **Rate limits key on the client IP** (`http/clientIp.ts`). Behind the frontend's `/api` proxy that's `X-Forwarded-For`, believed only when the request carries `X-Proxy-Secret` matching `PROXY_SECRET`.
 
@@ -217,7 +219,7 @@ Never use `drizzle-kit push`: Drizzle doesn't know about the hand-written `booki
 ## Tests
 
 - **Unit tests** for pure logic sit next to it (`schedule/*.test.ts`, `bookings/reference.test.ts`).
-- **Database and HTTP tests** run against the real local Postgres. Each runs inside a transaction that is always rolled back (`test/db.ts`), so they leave the seeded dev data untouched. HTTP tests go through `app.inject()` (`test/app.ts`): real routing, validation and serialisation, no open port. They pass a fixed `now`, so time-based rules are repeatable.
+- **Database and HTTP tests** run against the real local Postgres. Each runs inside a Drizzle transaction that is always rolled back (`test/db.ts`), so they leave the seeded dev data untouched; a route's own transaction becomes a savepoint inside it. HTTP tests go through `app.inject()` (`test/app.ts`): real routing, validation and serialisation, no open port. They pass a fixed `now`, so time-based rules are repeatable.
 - The database must be up and migrated first (`db:up`, `db:migrate`).
 
 ## Adding an endpoint

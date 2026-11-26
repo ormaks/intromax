@@ -144,7 +144,12 @@ export function localDay(date: string, timezone: string): TimeRange {
 }
 
 /** Whether half-open intervals [aStart, aEnd) and [bStart, bEnd) share any time. */
-function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
+export function overlaps(
+  aStart: number,
+  aEnd: number,
+  bStart: number,
+  bEnd: number,
+) {
   return aStart < bEnd && bStart < aEnd;
 }
 

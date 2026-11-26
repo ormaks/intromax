@@ -1,13 +1,9 @@
-import {
-  barberList,
-  serviceList,
-  type WorkingDay,
-} from "@intromax/barbershop-contracts";
+import { barberList, serviceList } from "@intromax/barbershop-contracts";
 import { asc, eq } from "drizzle-orm";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { groupHoursByBarber } from "../catalogue/hours";
 import type { Db } from "../db/client";
 import { barbers, barberWorkingHours, services } from "../db/schema";
-import { toHHMM } from "../schedule/clock";
 
 /** GET /v1/services and GET /v1/barbers: what a guest can book, and with whom. */
 export const catalogueRoutes: FastifyPluginAsyncZod<{ db: Db }> = async (
@@ -44,23 +40,7 @@ export const catalogueRoutes: FastifyPluginAsyncZod<{ db: Db }> = async (
         .where(eq(barbers.isActive, true))
         .orderBy(asc(barberWorkingHours.weekday));
 
-      const hoursByBarber = new Map<string, WorkingDay[]>();
-      for (const { day } of hours) {
-        const list = hoursByBarber.get(day.barberId) ?? [];
-        list.push({
-          weekday: day.weekday,
-          startsAt: toHHMM(day.startsAt),
-          endsAt: toHHMM(day.endsAt),
-          break:
-            day.breakStartsAt && day.breakEndsAt
-              ? {
-                  startsAt: toHHMM(day.breakStartsAt),
-                  endsAt: toHHMM(day.breakEndsAt),
-                }
-              : null,
-        });
-        hoursByBarber.set(day.barberId, list);
-      }
+      const hoursByBarber = groupHoursByBarber(hours.map(({ day }) => day));
 
       return {
         barbers: rows.map((barber) => ({

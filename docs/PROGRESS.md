@@ -16,15 +16,43 @@ The barbershop booking app is a pet project with a real backend, built as its ow
 | B2    | Data model            | API app skeleton, Docker Postgres, Drizzle schema and migrations (exclusion constraint included), seed, DB constraint tests | Done                         |
 | B3a   | Public reads          | Fastify server, `modules/barbershop-contracts`, error format, health, shop, services, barbers, availability (slots)         | Done                         |
 | B3b   | Guest bookings        | Create, look up and cancel a booking, `23P01` → 409, rate limits                                                            | Done                         |
-| B4    | Auth                  | scrypt passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                    | Implemented, awaiting review |
-| B5    | Admin API             | Admin bookings, services, barbers and hours, the overview, analytics                                                        | Planned                      |
+| B4    | Auth                  | scrypt passwords, server-side sessions, login/logout/me, `create-admin` CLI, admin guard                                    | Done                         |
+| B5a   | Admin catalogue       | Services and barbers CRUD, weekly hours with the opening-hours check, bookings to review                                    | Implemented, awaiting review |
+| B5b   | Admin bookings        | Bookings table, view/edit/complete/cancel, the overview, analytics                                                          | Planned                      |
 | B6    | Frontend: public site | `apps/barbershop`: landing, booking flow, lookup and cancel, `/api` proxy, e2e smoke tests                                  | Planned                      |
 | B7    | Frontend: admin       | Admin login, overview, bookings table, services and barbers CRUD, hours editor, charts                                      | Planned                      |
 | B8    | Deploy                | Neon, the API on Railway, Render or Fly, the frontend Worker on Cloudflare, CI for both apps                                | Planned                      |
 
+### B5a — Admin catalogue
+
+**Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`. B5 is split in two PRs: the catalogue here, bookings in B5b.
+
+**Shipped:**
+
+- **`/v1/admin`**: one plugin whose `onRequest` hook is `requireAdmin`, so no admin route exists without it, and a caller without a session gets 401 before any body is read.
+- **Services:** list (inactive too), create, edit (incl. `isActive`), delete. A service bookings use can't be deleted: the database's `ON DELETE RESTRICT` refuses, and that becomes 409 `in_use`.
+- **Barbers:** list with hours, create (optionally with a week of hours, in one transaction), edit, delete (409 `in_use` the same way; hours cascade).
+- **`PUT /barbers/:id/hours`:** replaces the week in a transaction; any day outside opening hours is 422 `outside_opening_hours` naming the weekdays. Saved anyway when it strands bookings: the response lists the upcoming confirmed ones the new week no longer covers (`isOutsideHours`: day off, too early, too late, or in the break).
+- **Deactivating a barber** returns their upcoming bookings the same way; they disappear for guests at once.
+- **Contracts** for all of it, with the week's rules (start before end, break inside, each weekday once) checked as 422s before the database sees them.
+- **Tests, 81 in all:** every admin route answers 401 without a session (even with a nonsense body), the service and barber flows, outside opening hours creating nothing, the review list after an hours change and a deactivation, and `isOutsideHours` (boundaries, the break, a day off).
+
+**Decisions:**
+
+- **Open questions 5-7** (admin edits always follow the guest rules; hours changes and deactivation save and list the bookings to review).
+- **Tests run in a Drizzle transaction,** so a route's own transaction nests as a savepoint inside it; `Db` now covers transactions too.
+- **`bookingsToReview` includes the customer's phone:** admin-only, and it's how the admin reaches them.
+- **Only bookings that haven't started are reviewed:** one already in progress is left alone.
+- **Saving a week locks the barber's row** (`SELECT … FOR UPDATE`), so two saves for one barber take turns instead of one failing.
+- **Input caps that keep values inside Postgres's `integer`:** price up to $10,000, display order up to 10,000; `photoUrl` must be http(s).
+
+**Next:** B5b — admin bookings, the overview and analytics.
+
+---
+
 ### B4 — Auth
 
-**Status:** Implemented, awaiting review - spec: `docs/specs/barbershop.md`.
+**Status:** Done - merged.
 
 **Shipped:**
 

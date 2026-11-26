@@ -1,4 +1,5 @@
 /** Postgres error codes (SQLSTATE) the API reacts to. */
+export const PG_FOREIGN_KEY_VIOLATION = "23503";
 export const PG_UNIQUE_VIOLATION = "23505";
 export const PG_EXCLUSION_VIOLATION = "23P01";
 
